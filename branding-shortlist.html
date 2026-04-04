@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kalshi Quick Search Naming Shortlist</title>
+  <style>
+    :root {
+      --bg: #eef8f4;
+      --panel: rgba(255, 255, 255, 0.78);
+      --panel-strong: rgba(255, 255, 255, 0.92);
+      --line: rgba(13, 37, 31, 0.09);
+      --ink: #101a18;
+      --muted: #5d6965;
+      --mint: #12c58a;
+      --mint-deep: #0b9f70;
+      --shadow: 0 24px 60px rgba(15, 37, 31, 0.12);
+      --radius: 24px;
+      --font: "SF Pro Display", "Inter", ui-sans-serif, system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: var(--font);
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(18, 197, 138, 0.22), transparent 28%),
+        radial-gradient(circle at top right, rgba(9, 155, 109, 0.13), transparent 24%),
+        linear-gradient(180deg, #f6fcf9 0%, #eaf5f1 100%);
+    }
+
+    .shell {
+      width: min(1480px, calc(100vw - 48px));
+      margin: 24px auto 48px;
+    }
+
+    .section-title {
+      margin: 18px 0 14px;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .picks {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .pick {
+      padding: 22px;
+      border-radius: 24px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(245,252,248,0.9));
+      box-shadow: 0 16px 34px rgba(16, 26, 24, 0.08);
+    }
+
+    .pick .domain {
+      margin-top: 8px;
+      font-weight: 700;
+      color: var(--mint-deep);
+    }
+
+    .pick p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .card {
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(249,253,251,0.9));
+      box-shadow: 0 18px 42px rgba(13, 37, 31, 0.08);
+      min-height: 360px;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto auto;
+      width: 180px;
+      height: 180px;
+      background: radial-gradient(circle, color-mix(in srgb, var(--accent) 16%, transparent), transparent 65%);
+      transform: translate(28%, -28%);
+      pointer-events: none;
+    }
+
+    .card-inner {
+      position: relative;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      gap: 16px;
+    }
+
+    .badge-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 800;
+      background: color-mix(in srgb, var(--accent) 12%, white);
+      color: color-mix(in srgb, var(--accent) 72%, black);
+    }
+
+    .status {
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: rgba(18, 197, 138, 0.11);
+      color: var(--mint-deep);
+    }
+
+    .brand-preview {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 18px;
+      border-radius: 22px;
+      background:
+        linear-gradient(135deg, color-mix(in srgb, var(--accent) 16%, white), rgba(255,255,255,0.72));
+      border: 1px solid color-mix(in srgb, var(--accent) 20%, rgba(16,26,24,0.06));
+      min-height: 102px;
+    }
+
+    .brandmark {
+      width: 60px;
+      height: 60px;
+      border-radius: 18px;
+      background: color-mix(in srgb, var(--accent) 14%, white);
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+    }
+
+    .wordmark .name {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+
+    .wordmark .descriptor {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    .card h3 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.02;
+      letter-spacing: -0.04em;
+    }
+
+    .domain-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      color: var(--mint-deep);
+      text-decoration: none;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      font-size: 18px;
+    }
+
+    .domain-link:hover { text-decoration: underline; }
+
+    .summary {
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .notes {
+      margin-top: auto;
+      display: grid;
+      gap: 10px;
+    }
+
+    .note {
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(16, 26, 24, 0.04);
+      font-size: 13px;
+      color: var(--ink);
+      line-height: 1.45;
+    }
+
+    .note strong { display: block; margin-bottom: 3px; }
+
+    .footer {
+      margin: 28px 0 10px;
+      padding: 18px 22px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.82);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    svg {
+      width: 36px;
+      height: 36px;
+      overflow: visible;
+    }
+
+    @media (max-width: 1180px) {
+      .grid, .picks { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 780px) {
+      .shell { width: min(100vw - 24px, 1480px); }
+      .grid, .picks { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="section-title">Top picks</div>
+    <section class="picks">
+      <article class="pick">
+        <div class="badge">Editor pick</div>
+        <div class="domain">getthetruth.io</div>
+        <p>Closest to your original instinct. Big statement, memorable, slightly provocative, and now with a stronger tech-feeling domain than the earlier `.app` pass.</p>
+      </article>
+      <article class="pick">
+        <div class="badge">Editor pick</div>
+        <div class="domain">truthpulse.co</div>
+        <p>Best mix of speed, modernity, and live-data energy. The `.co` makes it feel tighter and more brand-led than the `.app` fallback.</p>
+      </article>
+      <article class="pick">
+        <div class="badge">Editor pick</div>
+        <div class="domain">oddsatlas.co</div>
+        <p>Most premium and platform-scalable. Suggests comprehensive market coverage and works well if the product expands beyond quick search over time.</p>
+      </article>
+    </section>
+
+    <div class="section-title">Full shortlist</div>
+    <section id="grid" class="grid"></section>
+
+    <section class="footer">
+      Domain note: availability can change at any time, so this should be treated as a strong shortlist rather than a reservation. Brand note: I only checked domain availability here, not trademark status, App Store conflicts, or social handles. If you pick 3 to 5 finalists, the next useful step is a tighter brand screen across trademark risk, social availability, and icon refinement.
+    </section>
+  </div>
+
+  <script>
+    const candidates = [
+      {
+        name: "Get the Truth",
+        domain: "getthetruth.io",
+        angle: "Truth-first",
+        motif: "beam",
+        accent: "#0fb783",
+        descriptor: "Direct, bold, conviction-driven",
+        summary: "A declarative brand with punch. It feels like a tool you invoke to cut through noise quickly.",
+        logo: "A clean spotlight beam slicing into a circular field, suggesting signal through clutter.",
+        note: "Best if you want the app to feel editorial and assertive rather than purely financial."
+      },
+      {
+        name: "TruthTicker",
+        domain: "truthticker.app",
+        angle: "Financial utility",
+        motif: "ticker",
+        accent: "#14bf88",
+        descriptor: "Bloomberg energy, sharper tone",
+        summary: "Feels native to prediction markets and desktop workflows. Crisp, fast, and easy to say.",
+        logo: "A monogram T built from two ticker bars with one upward notch.",
+        note: "Strong for a menu bar app because it already sounds like a market-side utility."
+      },
+      {
+        name: "TruthTally",
+        domain: "truthtally.app",
+        angle: "Countable reality",
+        motif: "tally",
+        accent: "#22b07f",
+        descriptor: "Softer, smart, analytical",
+        summary: "A little more human and friendly. It implies measured outcomes rather than hot takes.",
+        logo: "Four vertical tally strokes crossed by a mint diagonal, resolving into a check shape.",
+        note: "Good if you want more warmth and less aggressiveness than 'Get the Truth.'"
+      },
+      {
+        name: "TruthOdds",
+        domain: "truthodds.app",
+        angle: "Prediction-market literal",
+        motif: "odds",
+        accent: "#09b47a",
+        descriptor: "Explicit, functional, discoverable",
+        summary: "Very clear about what the app does: turn truth-seeking into probability lookup.",
+        logo: "Two mirrored probability arcs converging around a centered dot.",
+        note: "Probably the most SEO- and comprehension-friendly of the truth-led names."
+      },
+      {
+        name: "TruthPulse",
+        domain: "truthpulse.co",
+        angle: "Live signal",
+        motif: "pulse",
+        accent: "#10c58a",
+        descriptor: "Modern, fluid, premium",
+        summary: "Excellent for a fast-refreshing market app. It sounds alive without becoming noisy.",
+        logo: "A rounded pulse line that ends in a subtle upward price wick.",
+        note: "One of the strongest all-around options for desktop now and mobile later."
+      },
+      {
+        name: "TruthSignal",
+        domain: "truthsignal.co",
+        angle: "Filtering noise",
+        motif: "signal",
+        accent: "#0ea978",
+        descriptor: "Cerebral, technical, clean",
+        summary: "Positions the app as a signal extractor rather than a search box. Strong if you want a more serious tone.",
+        logo: "Three expanding signal arcs anchored by a precise dot and a vertical stem.",
+        note: "Feels credible in a product suite if you later build additional tools."
+      },
+      {
+        name: "TruthVector",
+        domain: "truthvector.io",
+        angle: "Directional confidence",
+        motif: "vector",
+        accent: "#2caf8f",
+        descriptor: "Sharp, mathematical, directional",
+        summary: "A more technical and design-forward name. Implies direction, momentum, and market movement.",
+        logo: "A diagonal vector arrow crossing a circular coordinate point.",
+        note: "Great if you want the brand to feel more quant than media."
+      },
+      {
+        name: "TruthWindow",
+        domain: "truthwindow.app",
+        angle: "Seeing in",
+        motif: "window",
+        accent: "#31b99b",
+        descriptor: "Transparent, desktop-native",
+        summary: "Especially good for a menu bar utility because it literally suggests a fast reveal into market truth.",
+        logo: "A square window frame with one pane transformed into a trend line.",
+        note: "Feels slightly calmer and more product-ish than some of the punchier options."
+      },
+      {
+        name: "TruthTrack",
+        domain: "truthtrack.app",
+        angle: "Monitoring",
+        motif: "track",
+        accent: "#00b47f",
+        descriptor: "Persistent, practical, active",
+        summary: "Suggests ongoing tracking rather than one-off lookup. Good if alerts or watchlists might come later.",
+        logo: "Twin track lines with a bright marker dot riding ahead.",
+        note: "Good long-term product platform name if you plan monitoring features."
+      },
+      {
+        name: "TruthThread",
+        domain: "truththread.app",
+        angle: "Linked context",
+        motif: "thread",
+        accent: "#15a772",
+        descriptor: "Narrative, connected, contextual",
+        summary: "Hints at connecting related markets and teasing out a coherent story from noisy events.",
+        logo: "Two looping thread curves weaving into a single continuous strand.",
+        note: "Slightly more editorial and story-oriented than the other truth names."
+      },
+      {
+        name: "MarketTruth",
+        domain: "markettruth.app",
+        angle: "What the market says",
+        motif: "truth",
+        accent: "#0eb67f",
+        descriptor: "Blunt, explanatory, trustworthy",
+        summary: "Frames the product around the market itself being a truth engine. Clear and strong.",
+        logo: "A check-mark slash embedded in a rounded market circle.",
+        note: "Excellent if you want the brand to sound like a destination, not just a utility."
+      },
+      {
+        name: "MarketMint",
+        domain: "marketmint.io",
+        angle: "Fresh signal",
+        motif: "mint",
+        accent: "#24bf86",
+        descriptor: "Fresh, modern, slightly luxe",
+        summary: "Feels premium and polished. Less literal, but memorable and flexible.",
+        logo: "A stylized mint leaf formed from two price candles.",
+        note: "One of the strongest visual-brand options if you care about sleekness."
+      },
+      {
+        name: "MarketBeacon",
+        domain: "marketbeacon.io",
+        angle: "Guiding light",
+        motif: "beacon",
+        accent: "#18b184",
+        descriptor: "Guiding, directional, confident",
+        summary: "Suggests a tool that helps you orient quickly across a noisy market landscape.",
+        logo: "A lighthouse beam simplified into three stacked wedges around a central mast.",
+        note: "Feels premium and productized without being too finance-generic."
+      },
+      {
+        name: "MarketWindow",
+        domain: "marketwindow.io",
+        angle: "Fast view",
+        motif: "window",
+        accent: "#1db892",
+        descriptor: "Desktop-native, efficient, clean",
+        summary: "A practical and elegant name for a quick-glance app surface that opens into live markets.",
+        logo: "A rounded window frame with a diagonal mini-chart in the right pane.",
+        note: "Very good semantic fit for a menu bar or tray flyout product."
+      },
+      {
+        name: "MarketWhisper",
+        domain: "marketwhisper.app",
+        angle: "Subtle signal",
+        motif: "whisper",
+        accent: "#44b887",
+        descriptor: "Refined, understated, insider",
+        summary: "Feels like quiet intelligence rather than loud certainty. Stylish and memorable.",
+        logo: "A flowing speech-curve tapering into a market line.",
+        note: "Best if you want the brand to feel elegant and slightly mysterious."
+      },
+      {
+        name: "OddsAtlas",
+        domain: "oddsatlas.co",
+        angle: "Full market map",
+        motif: "atlas",
+        accent: "#14b37c",
+        descriptor: "Comprehensive, premium, expansive",
+        summary: "Strongest name if your long-term ambition is to cover a broad market universe across platforms.",
+        logo: "A globe grid interrupted by a rising diagonal path.",
+        note: "Probably the most premium-sounding non-truth name on the board."
+      },
+      {
+        name: "OddsSignal",
+        domain: "oddssignal.app",
+        angle: "Cleanest data read",
+        motif: "signal",
+        accent: "#0db684",
+        descriptor: "Quant, focused, modern",
+        summary: "Feels exactly like what the product is doing: extracting the actionable signal from markets.",
+        logo: "Signal arcs intersecting a probability dot inside a rounded square.",
+        note: "Very strong choice if you want serious market-tool energy."
+      },
+      {
+        name: "OddsVector",
+        domain: "oddsvector.app",
+        angle: "Directional markets",
+        motif: "vector",
+        accent: "#1ea38b",
+        descriptor: "Sharp, quantitative, fast",
+        summary: "More technical than friendly, but very productizable. Good fit for desktop and eventual API products.",
+        logo: "A vector arrow cut through a circular odds ring.",
+        note: "Could appeal especially to power users and traders."
+      },
+      {
+        name: "OddsBeam",
+        domain: "oddsbeam.io",
+        angle: "Instant spotlight",
+        motif: "beam",
+        accent: "#1aba77",
+        descriptor: "Fast, bright, utility-driven",
+        summary: "A snappy name that captures immediate visibility into odds and live changes.",
+        logo: "A narrow spotlight cone illuminating a rising marker.",
+        note: "Feels energetic and desktop-ready without sounding too literal."
+      },
+      {
+        name: "OddsHarbor",
+        domain: "oddsharbor.app",
+        angle: "Safe mooring for signal",
+        motif: "harbor",
+        accent: "#0ea970",
+        descriptor: "Stable, trustworthy, calm",
+        summary: "A little more mature and grounded. Suggests a place to quickly dock and orient yourself.",
+        logo: "A harbor arc with a center mast that doubles as a candlestick.",
+        note: "Best if you want trust and stability over speed and flash."
+      },
+      {
+        name: "OddsMint",
+        domain: "oddsmint.io",
+        angle: "Fresh market take",
+        motif: "mint",
+        accent: "#27bc90",
+        descriptor: "Fresh, sleek, polished",
+        summary: "Short, stylish, and strongly aligned with a green palette. Easy to brand beautifully.",
+        logo: "A geometric mint leaf with a cut-in ticker notch.",
+        note: "One of the easiest names here to make feel sexy and premium."
+      },
+      {
+        name: "OddsNative",
+        domain: "oddsnative.app",
+        angle: "Feels at home on device",
+        motif: "native",
+        accent: "#24ab82",
+        descriptor: "Platform-aligned, polished, product-y",
+        summary: "Interesting if you want the brand to emphasize a device-native, fast utility experience.",
+        logo: "A rounded app tile with two inner bars forming a subtle N shape.",
+        note: "Leans more app-brand than media-brand."
+      },
+      {
+        name: "OddsWire",
+        domain: "oddswire.app",
+        angle: "Live market feed",
+        motif: "wire",
+        accent: "#00ad7d",
+        descriptor: "Newsy, immediate, energetic",
+        summary: "Conveys a live stream of odds information. Good if freshness and speed are central to the brand.",
+        logo: "A wire curve carrying a pulse burst through its center.",
+        note: "Nice if you envision notifications, alerts, or push-style surfaces later."
+      },
+      {
+        name: "OddsPeek",
+        domain: "oddspeek.app",
+        angle: "Quick glance",
+        motif: "peek",
+        accent: "#0cb77d",
+        descriptor: "Lightweight, accessible, fast",
+        summary: "Very menu-bar-friendly name. It sounds like exactly what the user is doing: peeking at live odds.",
+        logo: "An eye-like oval framing a single steep sparkline.",
+        note: "Best for a very utility-first product personality."
+      },
+      {
+        name: "OddsRadar",
+        domain: "oddsradar.io",
+        angle: "Sweeping scan",
+        motif: "radar",
+        accent: "#13be89",
+        descriptor: "Scanning, tactical, watchful",
+        summary: "Suggests a live sweep across the whole market landscape. Strong and memorable.",
+        logo: "A radar sweep wedge rotating around a centered market dot.",
+        note: "Excellent if discovery and breadth are core to the product."
+      },
+      {
+        name: "PulseOdds",
+        domain: "pulseodds.io",
+        angle: "Heartbeat of the market",
+        motif: "pulse",
+        accent: "#11c391",
+        descriptor: "Dynamic, modern, alive",
+        summary: "A good balance of energy and clarity. The odds are alive; the product keeps you on the pulse.",
+        logo: "A pulse waveform transitioning into a price sparkline.",
+        note: "Pairs nicely with a sleek motion-led visual identity."
+      },
+      {
+        name: "SignalOdds",
+        domain: "signalodds.io",
+        angle: "Filtered probabilities",
+        motif: "signal",
+        accent: "#0eb386",
+        descriptor: "Precise, technical, credible",
+        summary: "One of the best serious-tool names here. It tells a sharp product story with almost no fluff.",
+        logo: "Three signal arcs clipped into a circular probability disc.",
+        note: "Strong for a polished pro utility with future expansion room."
+      },
+      {
+        name: "EventSignal",
+        domain: "eventsignal.app",
+        angle: "Event-driven market read",
+        motif: "signal",
+        accent: "#21b58d",
+        descriptor: "News-aware, contextual, broad",
+        summary: "Broadens the brand slightly beyond just odds and toward understanding event markets as a category.",
+        logo: "A circular event ring with three outbound signal ripples.",
+        note: "Good if you may eventually cover more than just quick probabilities."
+      },
+      {
+        name: "OutcomeAtlas",
+        domain: "outcomeatlas.app",
+        angle: "Map of possibilities",
+        motif: "atlas",
+        accent: "#18b07d",
+        descriptor: "Expansive, premium, smart",
+        summary: "Slightly more conceptual and less finance-literal, but very elegant and brandable.",
+        logo: "A globe grid where one longitude line becomes a rising arrow.",
+        note: "Feels upscale and broad enough for a bigger product family."
+      },
+      {
+        name: "VerdictSignal",
+        domain: "verdictsignal.io",
+        angle: "Probabilities with conviction",
+        motif: "verdict",
+        accent: "#09a974",
+        descriptor: "Sharp, confident, editorial",
+        summary: "Blends decisive language with signal extraction. Strong if you want the product to feel opinionated and fast.",
+        logo: "A check-mark verdict slash meeting expanding signal arcs.",
+        note: "A little more dramatic than some options, in a good way."
+      },
+      {
+        name: "LiveVerdict",
+        domain: "liveverdict.io",
+        angle: "Real-time answer",
+        motif: "verdict",
+        accent: "#2ab089",
+        descriptor: "Immediate, crisp, energetic",
+        summary: "Feels like a live answer engine. Strong if the product promise is quick resolution of uncertainty.",
+        logo: "A circular verdict stamp with a live pulse threaded through it.",
+        note: "One of the better names if you want urgency and decisiveness."
+      }
+    ];
+
+    const topPickDomains = new Set(["getthetruth.app", "truthpulse.app", "oddsatlas.app", "signalodds.app", "marketmint.app", "verdictsignal.app"]);
+
+    function icon(motif, accent) {
+      const stroke = accent;
+      const fill = `${accent}22`;
+      const common = `stroke="${stroke}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"`;
+      switch (motif) {
+        case "beam":
+          return `<svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="14" fill="${fill}" /><path ${common} d="M10 25 18 11 18 25M18 11 26 25" /></svg>`;
+        case "ticker":
+          return `<svg viewBox="0 0 36 36"><rect x="7" y="9" width="22" height="18" rx="6" fill="${fill}" /><path ${common} d="M11 22h5l3-8 3 5h3" /></svg>`;
+        case "tally":
+          return `<svg viewBox="0 0 36 36"><path ${common} d="M10 10v16M15 10v16M20 10v16M25 10v16M8 24l20-12" /></svg>`;
+        case "odds":
+          return `<svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="12" fill="${fill}" /><path ${common} d="M10 21c2-3 5-5 8-5s6 2 8 5M10 15c2 3 5 5 8 5s6-2 8-5" /></svg>`;
+        case "pulse":
+          return `<svg viewBox="0 0 36 36"><rect x="5" y="8" width="26" height="20" rx="7" fill="${fill}" /><path ${common} d="M8 19h6l3-6 4 11 3-5h4" /></svg>`;
+        case "signal":
+          return `<svg viewBox="0 0 36 36"><path ${common} d="M10 26c0-4 3-8 8-8s8 4 8 8M12 22c1.5-2.5 3.8-4 6-4s4.5 1.5 6 4M18 10v4" /><circle cx="18" cy="28" r="2.4" fill="${stroke}" /></svg>`;
+        case "vector":
+          return `<svg viewBox="0 0 36 36"><circle cx="11" cy="25" r="4" fill="${fill}" /><path ${common} d="M11 25 26 10M20 10h6v6" /></svg>`;
+        case "window":
+          return `<svg viewBox="0 0 36 36"><rect x="7" y="8" width="22" height="20" rx="5" fill="${fill}" /><path ${common} d="M18 8v20M7 15h22M21 22l3-5 3 3" /></svg>`;
+        case "track":
+          return `<svg viewBox="0 0 36 36"><path ${common} d="M9 24c5-8 9-8 18 0M9 14c5 8 9 8 18 0" /><circle cx="26" cy="14" r="2.6" fill="${stroke}" /></svg>`;
+        case "thread":
+          return `<svg viewBox="0 0 36 36"><path ${common} d="M9 24c0-5 4-9 9-9s9 4 9 9M9 12c0 5 4 9 9 9s9-4 9-9" /></svg>`;
+        case "truth":
+          return `<svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="13" fill="${fill}" /><path ${common} d="M11 18l4 4 10-10" /></svg>`;
+        case "mint":
+          return `<svg viewBox="0 0 36 36"><path d="M18 8c6 0 10 5 10 10 0 6-5 10-10 10-6 0-10-5-10-10 0-5 4-10 10-10Z" fill="${fill}" /><path ${common} d="M18 11c4 2 6 5 6 9-3 0-6-2-8-5-2-3-2-7 2-10M18 11c-4 2-6 5-6 9 3 0 6-2 8-5" /></svg>`;
+        case "beacon":
+          return `<svg viewBox="0 0 36 36"><path ${common} d="M18 9v18M14 27h8M12 18l-4 3M24 18l4 3M12 13l-3-3M24 13l3-3" /><circle cx="18" cy="18" r="4" fill="${fill}" /></svg>`;
+        case "whisper":
+          return `<svg viewBox="0 0 36 36"><path ${common} d="M8 20c3-5 8-8 15-8 2 0 4 .3 5 .8-2 4-6 8-12 10-3 1-6 1.4-8 1.2" /></svg>`;
+        case "atlas":
+          return `<svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="12" fill="${fill}" /><path ${common} d="M18 6c4 4 6 8 6 12s-2 8-6 12M18 6c-4 4-6 8-6 12s2 8 6 12M6 18h24M9 11c3 2 6 3 9 3s6-1 9-3" /></svg>`;
+        case "harbor":
+          return `<svg viewBox="0 0 36 36"><path ${common} d="M18 8v14M13 14h10M10 26c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2" /></svg>`;
+        case "native":
+          return `<svg viewBox="0 0 36 36"><rect x="8" y="8" width="20" height="20" rx="7" fill="${fill}" /><path ${common} d="M13 23V13l10 10V13" /></svg>`;
+        case "wire":
+          return `<svg viewBox="0 0 36 36"><path ${common} d="M7 20h5l3-6 4 12 3-7h7" /></svg>`;
+        case "peek":
+          return `<svg viewBox="0 0 36 36"><path ${common} d="M6 18c3.5-5 7.5-7.5 12-7.5S26.5 13 30 18c-3.5 5-7.5 7.5-12 7.5S9.5 23 6 18Z" /><circle cx="18" cy="18" r="3.5" fill="${stroke}" /></svg>`;
+        case "radar":
+          return `<svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="12" fill="${fill}" /><path ${common} d="M18 18 28 12M18 18V8M18 18H8" /><circle cx="18" cy="18" r="2.3" fill="${stroke}" /></svg>`;
+        case "verdict":
+          return `<svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="13" fill="${fill}" /><path ${common} d="M11 19l4 4 10-10M24 10c2 2 3 5 3 8" /></svg>`;
+        default:
+          return `<svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="12" fill="${fill}" /><path ${common} d="M10 22c4-7 8-9 16-8" /></svg>`;
+      }
+    }
+
+    function render() {
+      const grid = document.getElementById("grid");
+      grid.innerHTML = candidates.map((candidate) => `
+        <article class="card" style="--accent:${candidate.accent}">
+          <div class="card-inner">
+            <div class="badge-row">
+              <div class="badge">${candidate.angle}</div>
+              <div class="status">Verified available</div>
+            </div>
+            <div class="brand-preview">
+              <div class="brandmark">${icon(candidate.motif, candidate.accent)}</div>
+              <div class="wordmark">
+                <div class="name">${candidate.name}</div>
+                <div class="descriptor">${candidate.descriptor}</div>
+              </div>
+            </div>
+            <div>
+              <h3>${candidate.name}</h3>
+              <a class="domain-link" href="https://${candidate.domain}" target="_blank" rel="noreferrer">${candidate.domain}</a>
+            </div>
+            <div class="summary">${candidate.summary}</div>
+            <div class="notes">
+              <div class="note"><strong>Logo direction</strong>${candidate.logo}</div>
+              <div class="note"><strong>Brand note</strong>${candidate.note}</div>
+            </div>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    render();
+  </script>
+</body>
+</html>

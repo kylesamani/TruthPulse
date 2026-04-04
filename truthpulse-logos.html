@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TruthPulse Logo Concepts</title>
+  <style>
+    :root {
+      --bg: #edf8f3;
+      --panel: rgba(255,255,255,0.88);
+      --line: rgba(10, 35, 29, 0.08);
+      --ink: #10201b;
+      --muted: #5d6c67;
+      --mint: #10c58a;
+      --mint-deep: #0b9f70;
+      --mint-soft: #dff7ee;
+      --shadow: 0 20px 50px rgba(14, 31, 27, 0.10);
+      --font: "SF Pro Display", "Inter", ui-sans-serif, system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: var(--font);
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(16,197,138,0.16), transparent 24%),
+        linear-gradient(180deg, #f6fcf8 0%, #eaf6f1 100%);
+    }
+
+    .shell {
+      width: min(1500px, calc(100vw - 40px));
+      margin: 24px auto 40px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 20px;
+      padding: 22px 24px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: var(--mint-soft);
+      color: var(--mint-deep);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 12px 0 4px;
+      font-size: clamp(30px, 5vw, 54px);
+      line-height: 0.96;
+      letter-spacing: -0.05em;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.45;
+      max-width: 760px;
+    }
+
+    .brand-lockup {
+      text-align: right;
+    }
+
+    .brand-lockup .name {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+
+    .brand-lockup .url {
+      margin-top: 6px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--mint-deep);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,252,250,0.92));
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      box-shadow: 0 18px 42px rgba(13, 31, 28, 0.07);
+      overflow: hidden;
+    }
+
+    .card-inner {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      height: 100%;
+    }
+
+    .tagrow {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .index {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .family {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--mint-deep);
+      background: var(--mint-soft);
+      padding: 7px 10px;
+      border-radius: 999px;
+    }
+
+    .preview {
+      min-height: 180px;
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at top left, rgba(16,197,138,0.13), transparent 34%),
+        linear-gradient(180deg, #fcfffd, #f0faf5);
+      border: 1px solid rgba(11, 159, 112, 0.10);
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+
+    .mock {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .markbox {
+      width: 84px;
+      height: 84px;
+      border-radius: 24px;
+      background: white;
+      display: grid;
+      place-items: center;
+      box-shadow: inset 0 0 0 1px rgba(16, 32, 27, 0.05);
+    }
+
+    svg {
+      width: 56px;
+      height: 56px;
+      overflow: visible;
+    }
+
+    .wordmark {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .wordmark .title {
+      font-size: 25px;
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      line-height: 1;
+    }
+
+    .wordmark .domain {
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.02em;
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: -0.03em;
+    }
+
+    .desc {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .note {
+      margin-top: auto;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(16, 32, 27, 0.04);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .note strong {
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    @media (max-width: 1080px) {
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .topbar { flex-direction: column; align-items: start; }
+      .brand-lockup { text-align: left; }
+    }
+
+    @media (max-width: 740px) {
+      .grid { grid-template-columns: 1fr; }
+      .shell { width: min(100vw - 20px, 1500px); }
+      .mock { flex-direction: column; }
+      .wordmark { text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="topbar">
+      <div>
+        <div class="eyebrow">Logo exploration</div>
+        <h1>30 logo directions for TruthPulse</h1>
+        <div class="sub">Each concept pairs a simple symbol system with the same wordmark so you can compare icon logic, not just decoration. These are concept sketches, optimized for app icon, menu bar, and favicon potential.</div>
+      </div>
+      <div class="brand-lockup">
+        <div class="name">TruthPulse</div>
+        <div class="url">truthpulse.co</div>
+      </div>
+    </section>
+
+    <section id="grid" class="grid"></section>
+  </div>
+
+  <script>
+    const concepts = [
+      ["Pulse Line","Pulse","Single ECG-style line resolving into a subtle uptrend.","Cleanest direct expression of the name."],
+      ["Pulse Dot","Pulse","Centered pulse line anchored by a truth-dot.","Feels precise and trustworthy."],
+      ["Beacon Pulse","Signal","Broadcast ripple with a heartbeat cut through it.","Best for a live-data product story."],
+      ["TP Monogram","Lettermark","Interlocked T and P built from one stroke.","Most corporate and scalable."],
+      ["Pulse Ring","Circle","Circular badge with an inner pulse trace.","Strong for app icon and favicon."],
+      ["Truth Check","Verdict","Check-mark blended into a pulse segment.","Leans harder into the 'truth' promise."],
+      ["Candlestick Pulse","Market","Heartbeat shape made from two candle bars.","Best if you want obvious market DNA."],
+      ["Split Wave","Pulse","Two offset waveforms meeting in the center.","Feels modern and slightly premium."],
+      ["Signal Arc","Signal","Signal arcs emerging from a sharp pulse kink.","Good for a more technical look."],
+      ["Window Pulse","Utility","Rounded square with a pulse through the pane.","Very menu bar utility-friendly."],
+      ["Radar Pulse","Radar","Radar sweep with a tiny central heartbeat.","Good if breadth and discovery matter."],
+      ["Truth Lens","Lens","A lens frame focuses a pulse line.","Suggests clarity through noise."],
+      ["Insight Beam","Beam","A diagonal beam reveals a hidden pulse.","Feels editorial and bold."],
+      ["Equalizer","Data","Three bars with the middle bar pulsing.","Hints at real-time market scanning."],
+      ["Heartbeat Shield","Trust","Shield outline softened by a pulse stroke.","Leans secure, credible, and serious."],
+      ["Orbit Pulse","Orbit","Orbit ring around a pulse-centered core.","Feels premium and slightly futuristic."],
+      ["Spark Pulse","Momentum","Sparkline ends in a heartbeat notch.","Best mix of markets plus liveness."],
+      ["Crest Monogram","Lettermark","Badge-style TP monogram inside a rounded crest.","Works well if you want a stronger emblem."],
+      ["Binary Pulse","Data","Tiny data nodes connected by one pulse line.","More technical and quant-y."],
+      ["Thread Pulse","Flow","Continuous ribbon stroke forming a T and pulse.","Elegant and motion-friendly."],
+      ["Truth Stamp","Verdict","Circular stamp with a pulse and check hybrid.","More assertive and brand-heavy."],
+      ["Compass Pulse","Atlas","Compass tick marks with a pulse centerline.","Good if you like the 'guide' positioning."],
+      ["Market Eye","Peek","Eye silhouette framing the pulse trace.","Strong for quick-glance utility branding."],
+      ["Dual Wave","Pulse","Two mirrored waves implying yes/no markets.","Best reference to binary outcomes."],
+      ["Pulse Tile","App Icon","Soft rounded tile with embossed pulse mark.","Optimized for macOS app icon feel."],
+      ["Needle Pulse","Precision","Thin indicator needle crossing a pulse.","Feels financial and exact."],
+      ["Echo Pulse","Signal","Repeating echoes behind the main heartbeat.","Gives a live-streaming feel."],
+      ["Pulse Prism","Beam","Pulse reflected through a geometric prism.","Design-forward and distinctive."],
+      ["North Star Pulse","Guide","A star point over a calm pulse line.","Feels aspirational and premium."],
+      ["Minimal TP","Lettermark","Ultra-minimal T and P made of pulse segments.","Best if you want maximum restraint."]
+    ];
+
+    function icon(type, accent = "#10c58a") {
+      const stroke = accent;
+      const fill = accent + "22";
+      const thin = `stroke="${stroke}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"`;
+      const solid = `fill="${stroke}"`;
+      const faint = `fill="${fill}"`;
+      switch (type) {
+        case "Pulse":
+          return `<svg viewBox="0 0 56 56"><path ${thin} d="M6 31h12l5-10 7 18 6-12h14"/></svg>`;
+        case "Signal":
+          return `<svg viewBox="0 0 56 56"><path ${thin} d="M8 31h9l4-8 6 15 5-10h7"/><path ${thin} d="M16 16c5-4 19-4 24 0"/><path ${thin} d="M20 11c4-2 12-2 16 0"/></svg>`;
+        case "Lettermark":
+          return `<svg viewBox="0 0 56 56"><path ${thin} d="M15 14h26M28 14v28M28 14h8c5 0 8 3 8 7s-3 7-8 7h-8"/></svg>`;
+        case "Circle":
+          return `<svg viewBox="0 0 56 56"><circle cx="28" cy="28" r="20" ${faint}/><path ${thin} d="M13 29h8l4-8 5 16 5-10h8"/></svg>`;
+        case "Verdict":
+          return `<svg viewBox="0 0 56 56"><circle cx="28" cy="28" r="20" ${faint}/><path ${thin} d="M11 29h8l4-8 5 16 5-10h8"/><path ${thin} d="M16 30l6 6 17-17"/></svg>`;
+        case "Market":
+          return `<svg viewBox="0 0 56 56"><path ${thin} d="M7 34h10l4-9 5 14 4-7h6"/><rect x="14" y="13" width="4" height="10" rx="2" ${solid}/><rect x="23" y="10" width="4" height="16" rx="2" ${solid}/><rect x="32" y="14" width="4" height="9" rx="2" ${solid}/></svg>`;
+        case "Utility":
+          return `<svg viewBox="0 0 56 56"><rect x="9" y="10" width="38" height="36" rx="10" ${faint}/><path ${thin} d="M14 30h10l4-9 5 15 5-9h4"/></svg>`;
+        case "Radar":
+          return `<svg viewBox="0 0 56 56"><circle cx="28" cy="28" r="18" ${faint}/><path ${thin} d="M28 28 42 20"/><path ${thin} d="M28 28h8l3-7 4 11"/><circle cx="28" cy="28" r="2.6" ${solid}/></svg>`;
+        case "Lens":
+          return `<svg viewBox="0 0 56 56"><circle cx="24" cy="24" r="14" ${faint}/><path ${thin} d="M14 25h6l3-6 4 12 3-6h4"/><path ${thin} d="m34 34 10 10"/></svg>`;
+        case "Beam":
+          return `<svg viewBox="0 0 56 56"><path ${thin} d="M10 39 29 16 46 39"/><path ${thin} d="M15 31h6l3-6 4 12 3-6h6"/></svg>`;
+        case "Data":
+          return `<svg viewBox="0 0 56 56"><circle cx="12" cy="31" r="2.6" ${solid}/><circle cx="24" cy="20" r="2.6" ${solid}/><circle cx="34" cy="37" r="2.6" ${solid}/><circle cx="44" cy="24" r="2.6" ${solid}/><path ${thin} d="M12 31 24 20 34 37 44 24"/></svg>`;
+        case "Trust":
+          return `<svg viewBox="0 0 56 56"><path ${thin} d="M28 10 42 16v12c0 10-8 15-14 18-6-3-14-8-14-18V16z"/><path ${thin} d="M16 29h8l3-6 4 12 4-8h5"/></svg>`;
+        case "Momentum":
+          return `<svg viewBox="0 0 56 56"><path ${thin} d="M8 36c7-12 12-17 19-17 6 0 8 4 12 4 3 0 5-2 9-8"/><path ${thin} d="M10 32h9l3-7 5 13 4-8h8"/></svg>`;
+        case "Flow":
+          return `<svg viewBox="0 0 56 56"><path ${thin} d="M15 14h18c7 0 11 4 11 9s-4 9-11 9H23v10"/><path ${thin} d="M12 30h8l3-6 4 12 4-7h7"/></svg>`;
+        case "Atlas":
+          return `<svg viewBox="0 0 56 56"><circle cx="28" cy="28" r="18" ${faint}/><path ${thin} d="M28 10c6 6 9 12 9 18s-3 12-9 18M28 10c-6 6-9 12-9 18s3 12 9 18"/><path ${thin} d="M14 30h8l3-6 4 12 4-7h8"/></svg>`;
+        case "Peek":
+          return `<svg viewBox="0 0 56 56"><path ${thin} d="M7 28c6-8 13-12 21-12s15 4 21 12c-6 8-13 12-21 12S13 36 7 28Z"/><path ${thin} d="M19 29h6l3-6 4 12 3-6h2"/></svg>`;
+        case "App Icon":
+          return `<svg viewBox="0 0 56 56"><rect x="9" y="9" width="38" height="38" rx="12" ${faint}/><path ${thin} d="M14 31h10l4-9 5 15 5-8h4"/></svg>`;
+        case "Precision":
+          return `<svg viewBox="0 0 56 56"><circle cx="28" cy="30" r="16" ${faint}/><path ${thin} d="M28 30 39 18"/><path ${thin} d="M14 31h8l3-7 4 12 3-6h8"/></svg>`;
+        default:
+          return `<svg viewBox="0 0 56 56"><path ${thin} d="M8 31h10l4-9 5 15 5-8h16"/></svg>`;
+      }
+    }
+
+    const grid = document.getElementById("grid");
+    grid.innerHTML = concepts.map((c, i) => `
+      <article class="card">
+        <div class="card-inner">
+          <div class="tagrow">
+            <div class="index">Option ${String(i + 1).padStart(2, "0")}</div>
+            <div class="family">${c[1]}</div>
+          </div>
+          <div class="preview">
+            <div class="mock">
+              <div class="markbox">${icon(c[1])}</div>
+              <div class="wordmark">
+                <div class="title">TruthPulse</div>
+                <div class="domain">truthpulse.co</div>
+              </div>
+            </div>
+          </div>
+          <h3>${c[0]}</h3>
+          <div class="desc">${c[2]}</div>
+          <div class="note">
+            <strong>Best use</strong>
+            ${c[3]}
+          </div>
+        </div>
+      </article>
+    `).join("");
+  </script>
+</body>
+</html>

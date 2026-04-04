@@ -1,0 +1,38 @@
+import Foundation
+
+actor MarketCacheStore {
+    private let cacheURL: URL
+    private let encoder = JSONEncoder()
+    private let decoder = JSONDecoder()
+
+    init(appSupportDirectory: URL) {
+        self.cacheURL = appSupportDirectory.appendingPathComponent("open-markets-cache.json")
+        encoder.dateEncodingStrategy = .iso8601
+        decoder.dateDecodingStrategy = .iso8601
+    }
+
+    func loadMarkets() -> [MarketSummary] {
+        guard
+            let data = try? Data(contentsOf: cacheURL),
+            let payload = try? decoder.decode(CachedMarketsPayload.self, from: data)
+        else {
+            return []
+        }
+
+        return payload.markets.filter { status in
+            let normalized = status.status.lowercased()
+            return normalized == "active" || normalized == "open"
+        }
+    }
+
+    func saveMarkets(_ markets: [MarketSummary]) {
+        let payload = CachedMarketsPayload(savedAt: Date(), markets: markets)
+        guard let data = try? encoder.encode(payload) else { return }
+        try? data.write(to: cacheURL, options: .atomic)
+    }
+}
+
+private struct CachedMarketsPayload: Codable {
+    let savedAt: Date
+    let markets: [MarketSummary]
+}

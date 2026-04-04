@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TruthPulse Brand Guide</title>
+  <style>
+    :root {
+      --bg: #edf8f3;
+      --panel: rgba(255,255,255,0.9);
+      --line: rgba(16,32,27,0.08);
+      --ink: #10201b;
+      --muted: #5d6c67;
+      --mint: #10c58a;
+      --mint-deep: #08966b;
+      --surface: #f4fbf7;
+      --surface-alt: #e8f7ef;
+      --shadow: 0 20px 44px rgba(14,31,27,0.08);
+      --font: "SF Pro Display", "Inter", ui-sans-serif, system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(16,197,138,0.14), transparent 24%),
+        linear-gradient(180deg, #f7fcf9 0%, #ebf6f1 100%);
+    }
+    .shell {
+      width: min(1400px, calc(100vw - 36px));
+      margin: 24px auto 42px;
+    }
+    .hero, .section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+    }
+    .hero {
+      padding: 28px;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 22px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+    .eyebrow {
+      display: inline-flex;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: var(--surface-alt);
+      color: var(--mint-deep);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    h1 {
+      margin: 14px 0 8px;
+      font-size: clamp(34px, 5vw, 58px);
+      line-height: 0.95;
+      letter-spacing: -0.05em;
+    }
+    .sub {
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.5;
+      max-width: 760px;
+    }
+    .hero-right {
+      padding: 24px;
+      border-radius: 24px;
+      background: linear-gradient(180deg, #ffffff, #eef9f4);
+      border: 1px solid rgba(16,32,27,0.06);
+    }
+    .hero-right img { width: 100%; display: block; }
+    .section {
+      padding: 22px;
+      margin-bottom: 18px;
+    }
+    .section h2 {
+      margin: 0 0 14px;
+      font-size: 24px;
+      letter-spacing: -0.04em;
+    }
+    .grid-2, .grid-3 {
+      display: grid;
+      gap: 16px;
+    }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .panel {
+      border: 1px solid rgba(16,32,27,0.07);
+      border-radius: 22px;
+      padding: 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(247,252,249,0.9));
+      min-height: 180px;
+    }
+    .panel.dark {
+      background: #0f1715;
+      color: white;
+    }
+    .panel.dark .caption { color: rgba(255,255,255,0.68); }
+    .asset {
+      min-height: 140px;
+      display: grid;
+      place-items: center;
+    }
+    .asset img {
+      max-width: 100%;
+      max-height: 150px;
+      display: block;
+    }
+    .caption {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .swatch {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      padding: 14px;
+      border: 1px solid rgba(16,32,27,0.06);
+      border-radius: 18px;
+      background: rgba(255,255,255,0.75);
+    }
+    .chip {
+      width: 64px;
+      height: 64px;
+      border-radius: 18px;
+      flex: 0 0 auto;
+      border: 1px solid rgba(0,0,0,0.06);
+    }
+    .swatch .meta {
+      display: grid;
+      gap: 3px;
+    }
+    .swatch .name {
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .swatch .hex {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .type-card {
+      padding: 18px;
+      border: 1px solid rgba(16,32,27,0.06);
+      border-radius: 20px;
+      background: rgba(255,255,255,0.82);
+    }
+    .type-sample {
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      margin-bottom: 6px;
+    }
+    .note {
+      padding: 16px 18px;
+      border-radius: 20px;
+      background: rgba(16,32,27,0.04);
+      color: var(--ink);
+      line-height: 1.5;
+      font-size: 14px;
+    }
+    @media (max-width: 980px) {
+      .hero, .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="hero">
+      <div>
+        <div class="eyebrow">Refined brand package</div>
+        <h1>TruthPulse</h1>
+        <div class="sub">
+          The selected equalizer concept has been refined into a single market pulse mark: crisp enough for a menu bar utility, distinctive enough for a product brand, and simple enough to survive at favicon and macOS status-item sizes.
+        </div>
+      </div>
+      <div class="hero-right">
+        <img src="Assets/Brand/TruthPulse/truthpulse-logotype.svg" alt="TruthPulse primary logo">
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Logo System</h2>
+      <div class="grid-2">
+        <div class="panel">
+          <div class="asset"><img src="Assets/Brand/TruthPulse/truthpulse-logotype.svg" alt="Primary horizontal logo"></div>
+          <div class="caption">Primary horizontal lockup for the website, launch screen, docs, and desktop app marketing surfaces.</div>
+        </div>
+        <div class="panel">
+          <div class="asset"><img src="Assets/Brand/TruthPulse/truthpulse-stacked.svg" alt="Stacked logo"></div>
+          <div class="caption">Stacked lockup for splash views, about screens, and editorial placements where the full brand should lead.</div>
+        </div>
+        <div class="panel">
+          <div class="asset"><img src="Assets/Brand/TruthPulse/truthpulse-icon.svg" alt="Icon logo"></div>
+          <div class="caption">Primary icon mark for app icon generation, avatars, favicons, and compact UI surfaces.</div>
+        </div>
+        <div class="panel dark">
+          <div class="asset"><img src="Assets/Brand/TruthPulse/truthpulse-icon-dark.svg" alt="Dark icon logo"></div>
+          <div class="caption">Dark-mode icon variant for dark backgrounds and system-level contexts.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Utility Variants</h2>
+      <div class="grid-2">
+        <div class="panel">
+          <div class="asset"><img src="Assets/Brand/TruthPulse/truthpulse-menubar.svg" alt="Menu bar lockup"></div>
+          <div class="caption">Compact menu bar lockup tuned for monochrome toolbar and status-item contexts on macOS.</div>
+        </div>
+        <div class="panel">
+          <div class="asset"><img src="Assets/Brand/TruthPulse/truthpulse-monochrome.svg" alt="Monochrome logo"></div>
+          <div class="caption">Monochrome fallback for print, export, embossing, and constrained color environments.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Color Palette</h2>
+      <div class="grid-3">
+        <div class="swatch"><div class="chip" style="background:#10C58A"></div><div class="meta"><div class="name">Primary Mint</div><div class="hex">#10C58A</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#08966B"></div><div class="meta"><div class="name">Deep Mint</div><div class="hex">#08966B</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#10201B"></div><div class="meta"><div class="name">Ink</div><div class="hex">#10201B</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#5D6C67"></div><div class="meta"><div class="name">Muted Slate</div><div class="hex">#5D6C67</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#F4FBF7"></div><div class="meta"><div class="name">Surface</div><div class="hex">#F4FBF7</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#E8F7EF"></div><div class="meta"><div class="name">Surface Alt</div><div class="hex">#E8F7EF</div></div></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Typography</h2>
+      <div class="grid-2">
+        <div class="type-card">
+          <div class="type-sample">TruthPulse</div>
+          <div class="caption">SF Pro Display, heavy weight, tight tracking. Clean enough for native Apple surfaces without feeling generic.</div>
+        </div>
+        <div class="note">
+          <strong>Brand voice</strong><br>
+          Fast, signal-forward, clean, slightly premium. The identity should feel like a native market utility, not a media publication or generic fintech dashboard.
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>
