@@ -3,6 +3,8 @@ import SwiftUI
 
 struct SearchFieldView: NSViewRepresentable {
     @Binding var text: String
+    var isEnabled: Bool = true
+    var placeholderText: String = "Search locally cached markets."
     let onMoveSelection: (Int) -> Void
     let onSubmit: () -> Void
 
@@ -10,7 +12,7 @@ struct SearchFieldView: NSViewRepresentable {
         let field = FocusSearchField()
         field.delegate = context.coordinator
         field.font = .systemFont(ofSize: 16, weight: .regular)
-        field.placeholderString = "Search live Kalshi markets"
+        field.placeholderString = placeholderText
         field.focusRingType = .none
         field.bezelStyle = .roundedBezel
         field.cell?.usesSingleLineMode = true
@@ -22,32 +24,24 @@ struct SearchFieldView: NSViewRepresentable {
         field.layer?.borderWidth = 1
         field.layer?.borderColor = NSColor(Color.truthPulseLine).cgColor
         field.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.96).cgColor
-        field.onKeyPress = { keyCode in
-            switch keyCode {
-            case 125:
-                onMoveSelection(1)
-            case 126:
-                onMoveSelection(-1)
-            case 36:
-                onSubmit()
-            default:
-                break
-            }
-        }
-        DispatchQueue.main.async {
-            field.window?.makeFirstResponder(field)
-        }
+        field.coordinator = context.coordinator
         return field
     }
 
     func updateNSView(_ nsView: NSSearchField, context: Context) {
+        context.coordinator.parent = self
         if nsView.stringValue != text {
             nsView.stringValue = text
         }
+        nsView.isEnabled = isEnabled
+        nsView.placeholderString = placeholderText
         nsView.font = .systemFont(ofSize: 16, weight: .regular)
-        DispatchQueue.main.async {
-            guard nsView.window?.firstResponder !== nsView.currentEditor() else { return }
-            nsView.window?.makeFirstResponder(nsView)
+        nsView.alphaValue = isEnabled ? 1.0 : 0.5
+        if isEnabled {
+            DispatchQueue.main.async {
+                guard nsView.window?.firstResponder !== nsView.currentEditor() else { return }
+                nsView.window?.makeFirstResponder(nsView)
+            }
         }
     }
 
@@ -68,6 +62,14 @@ struct SearchFieldView: NSViewRepresentable {
         }
 
         func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+            if commandSelector == #selector(NSResponder.moveDown(_:)) {
+                parent.onMoveSelection(1)
+                return true
+            }
+            if commandSelector == #selector(NSResponder.moveUp(_:)) {
+                parent.onMoveSelection(-1)
+                return true
+            }
             if commandSelector == #selector(NSResponder.insertNewline(_:)) {
                 parent.onSubmit()
                 return true
@@ -78,7 +80,7 @@ struct SearchFieldView: NSViewRepresentable {
 }
 
 private final class FocusSearchField: NSSearchField {
-    var onKeyPress: ((UInt16) -> Void)?
+    weak var coordinator: SearchFieldView.Coordinator?
 
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
@@ -92,13 +94,5 @@ private final class FocusSearchField: NSSearchField {
         super.updateLayer()
         layer?.borderColor = NSColor(Color.truthPulseLine).cgColor
         layer?.backgroundColor = NSColor.white.withAlphaComponent(0.96).cgColor
-    }
-
-    override func keyDown(with event: NSEvent) {
-        onKeyPress?(event.keyCode)
-        if [125, 126].contains(event.keyCode) {
-            return
-        }
-        super.keyDown(with: event)
     }
 }

@@ -30,7 +30,6 @@ struct MarketSummary: Identifiable, Hashable, Codable, Sendable {
     let noLabel: String?
     let eventTitle: String?
     let eventSubtitle: String?
-    let description: String?
     let category: String?
     let status: String
     let lastPrice: Double?
@@ -53,19 +52,19 @@ struct MarketSummary: Identifiable, Hashable, Codable, Sendable {
             return webURL
         }
 
-        if let eventTicker {
-            let encodedEvent = eventTicker.lowercased()
-            let encodedMarket = ticker.lowercased()
-            if let url = URL(string: "https://kalshi.com/markets/\(encodedEvent)/\(encodedMarket)") {
+        // Kalshi URL pattern: /markets/{seriesTicker}/{slug}/{eventTicker}
+        // The slug is cosmetic (any value works), but three segments are required.
+        if let seriesTicker, let eventTicker {
+            let series = seriesTicker.lowercased()
+            let event = eventTicker.lowercased()
+            if let url = URL(string: "https://kalshi.com/markets/\(series)/m/\(event)") {
                 return url
             }
         }
 
-        if let url = URL(string: "https://kalshi.com/browse?query=\(ticker.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ticker)") {
-            return url
-        }
-
-        return URL(string: "https://kalshi.com")!
+        let searchTerm = title.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ticker
+        return URL(string: "https://kalshi.com/browse?query=\(searchTerm)")
+            ?? URL(string: "https://kalshi.com")!
     }
 
     var displayOdds: Int? {

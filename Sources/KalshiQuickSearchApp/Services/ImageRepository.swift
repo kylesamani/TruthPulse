@@ -3,7 +3,14 @@ import CryptoKit
 import Foundation
 
 actor ImageRepository {
-    static let shared = try? ImageRepository()
+    static let shared: ImageRepository? = {
+        do {
+            return try ImageRepository()
+        } catch {
+            print("[TruthPulse] ImageRepository init failed: \(error)")
+            return nil
+        }
+    }()
 
     private let memoryCache = NSCache<NSURL, NSImage>()
     private let session: URLSession

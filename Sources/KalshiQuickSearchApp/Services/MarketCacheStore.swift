@@ -11,6 +11,21 @@ actor MarketCacheStore {
         decoder.dateDecodingStrategy = .iso8601
     }
 
+    /// Fast check — no file I/O beyond a stat call.
+    nonisolated func cacheFileExists() -> Bool {
+        FileManager.default.fileExists(atPath: cacheURL.path)
+    }
+
+    func savedAt() -> Date? {
+        guard
+            let data = try? Data(contentsOf: cacheURL),
+            let payload = try? decoder.decode(CachedMarketsPayload.self, from: data)
+        else {
+            return nil
+        }
+        return payload.savedAt
+    }
+
     func loadMarkets() -> [MarketSummary] {
         guard
             let data = try? Data(contentsOf: cacheURL),

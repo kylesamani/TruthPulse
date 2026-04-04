@@ -11,10 +11,8 @@ struct SparklineView: View {
                     .fill(Color.kalshiMintSoft.opacity(0.4))
 
                 if let trend, trend.points.count > 1 {
-                    let values = trend.points.map(\.value)
-                    let minValue = values.min() ?? 0
-                    let maxValue = values.max() ?? 100
-                    let span = max(maxValue - minValue, 1)
+                    let minValue: CGFloat = 0
+                    let span: CGFloat = 100
 
                     Path { path in
                         for (index, point) in trend.points.enumerated() {

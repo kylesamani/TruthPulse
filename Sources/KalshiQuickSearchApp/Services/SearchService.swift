@@ -1,5 +1,11 @@
 import Foundation
 
+/// Pre-computed search index entry for a single market.
+private struct IndexedMarket: Sendable {
+    let market: MarketSummary
+    let haystack: String // pre-normalized, joined searchable text
+}
+
 actor SearchService {
     private let apiClient: KalshiAPIClient
     private let cacheStore: MarketCacheStore
@@ -7,24 +13,35 @@ actor SearchService {
     private var trendCache: [String: MarketTrend] = [:]
     private var lastRefresh: Date?
     private var markets: [MarketSummary] = []
+    private var index: [IndexedMarket] = []
+
+    /// Synchronous check — no actor hop needed. Safe because it only does a file stat.
+    nonisolated let hasCacheOnDisk: Bool
 
     init(apiClient: KalshiAPIClient = KalshiAPIClient()) throws {
         let appSupport = try SearchService.makeAppSupportDirectory()
         self.apiClient = apiClient
         self.cacheStore = MarketCacheStore(appSupportDirectory: appSupport)
+        self.hasCacheOnDisk = cacheStore.cacheFileExists()
     }
 
     func bootstrapIfNeeded() async throws {
         if markets.isEmpty {
-            markets = await cacheStore.loadMarkets()
+            let loaded = await cacheStore.loadMarkets()
+            setMarkets(loaded)
         }
     }
 
     func hasLoadedMarkets() async -> Bool {
         if markets.isEmpty {
-            markets = await cacheStore.loadMarkets()
+            let loaded = await cacheStore.loadMarkets()
+            setMarkets(loaded)
         }
         return !markets.isEmpty
+    }
+
+    func lastCacheDate() async -> Date? {
+        await cacheStore.savedAt()
     }
 
     func refreshOpenMarkets(force: Bool = false) async throws {
@@ -32,43 +49,54 @@ actor SearchService {
             return
         }
 
-        let markets = try await apiClient.fetchOpenMarkets()
-        self.markets = markets
-        await cacheStore.saveMarkets(markets)
+        let fetched = try await apiClient.fetchOpenMarkets()
+        setMarkets(fetched)
+        await cacheStore.saveMarkets(fetched)
         self.lastRefresh = Date()
     }
 
-    func search(query: String, limit: Int = 30) async throws -> [SearchResult] {
+    private func setMarkets(_ newMarkets: [MarketSummary]) {
+        markets = newMarkets
+        index = newMarkets.map { market in
+            let fields = [
+                market.title,
+                market.subtitle ?? "",
+                market.yesLabel ?? "",
+                market.noLabel ?? "",
+                market.eventTitle ?? "",
+                market.eventSubtitle ?? "",
+                market.category ?? "",
+                market.ticker
+            ]
+            let haystack = fields.joined(separator: " ").normalizedSearchText
+            return IndexedMarket(market: market, haystack: haystack)
+        }
+    }
+
+    func search(query: String, limit: Int = 30) -> [SearchResult] {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return [] }
 
-        if markets.isEmpty {
-            markets = await cacheStore.loadMarkets()
-            if markets.isEmpty {
-                try await refreshOpenMarkets(force: true)
-            }
-        }
-
         let normalizedQuery = trimmed.normalizedSearchText
         let tokens = normalizedQuery.searchTokens
-        let candidates = markets
-            .filter { market in
-                Self.matches(query: normalizedQuery, tokens: tokens, market: market)
+
+        let candidates = index
+            .filter { entry in
+                if entry.haystack.contains(normalizedQuery) { return true }
+                return tokens.allSatisfy { entry.haystack.contains($0) }
             }
-            .map { market in
-                IndexedSearchCandidate(market: market, baseRank: 0)
-            }
+            .map { IndexedSearchCandidate(market: $0.market, baseRank: 0) }
 
         return Array(rankingPolicy.rank(query: query, candidates: candidates).prefix(limit))
     }
 
-    func trend(for marketTicker: String, window: TrendWindow) async throws -> MarketTrend {
+    func trend(for marketTicker: String, seriesTicker: String, window: TrendWindow) async throws -> MarketTrend {
         let key = cacheKey(for: marketTicker, window: window)
         if let cached = trendCache[key], Date().timeIntervalSince(cached.updatedAt) < 300 {
             return cached
         }
 
-        let trend = try await apiClient.fetchTrend(for: marketTicker, window: window)
+        let trend = try await apiClient.fetchTrend(for: marketTicker, seriesTicker: seriesTicker, window: window)
         trendCache[key] = trend
         return trend
     }
@@ -89,29 +117,4 @@ actor SearchService {
         return directory
     }
 
-    private static func matches(query: String, tokens: [String], market: MarketSummary) -> Bool {
-        let searchableFields = [
-            market.title,
-            market.subtitle ?? "",
-            market.yesLabel ?? "",
-            market.noLabel ?? "",
-            market.eventTitle ?? "",
-            market.eventSubtitle ?? "",
-            market.description ?? "",
-            market.category ?? "",
-            market.ticker
-        ]
-
-        let haystack = searchableFields
-            .joined(separator: " ")
-            .normalizedSearchText
-
-        if haystack.contains(query) {
-            return true
-        }
-
-        return tokens.allSatisfy { token in
-            haystack.contains(token)
-        }
-    }
 }

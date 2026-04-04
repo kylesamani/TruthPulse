@@ -34,7 +34,8 @@ struct DetailPanelView: View {
                             .foregroundStyle(Color.kalshiInk)
                             .lineLimit(3)
 
-                        if let eventTitle = result.market.eventTitle {
+                        if let eventTitle = result.market.eventTitle,
+                           eventTitle != result.market.title {
                             Text(eventTitle)
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundStyle(Color.kalshiMuted)
@@ -69,19 +70,6 @@ struct DetailPanelView: View {
                     Text(delta >= 0 ? "Up \(Int(delta.rounded())) pts in \(selectedWindow.title)" : "Down \(Int(abs(delta).rounded())) pts in \(selectedWindow.title)")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(delta >= 0 ? Color.kalshiMint : Color.red.opacity(0.85))
-                }
-
-                if let description = result.market.description {
-                    Text(description)
-                        .font(.system(size: 12))
-                        .foregroundStyle(Color.kalshiMuted)
-                        .lineSpacing(3)
-                        .lineLimit(4)
-                } else {
-                    Text("Keyboard-first lookup for live markets. Press Return at any time to jump straight to the market on Kalshi.")
-                        .font(.system(size: 12))
-                        .foregroundStyle(Color.kalshiMuted)
-                        .lineSpacing(3)
                 }
 
                 Button(action: onOpenInBrowser) {

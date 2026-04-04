@@ -116,36 +116,54 @@ struct KalshiMarketDTO: Decodable {
     }
 }
 
-struct KalshiBatchCandlestickResponse: Decodable {
-    let candlesticks: [KalshiMarketCandlestickSeries]
-}
-
-struct KalshiMarketCandlestickSeries: Decodable {
-    let marketTicker: String
-    let series: [KalshiCandleDTO]
-
-    enum CodingKeys: String, CodingKey {
-        case marketTicker = "market_ticker"
-        case series = "candlesticks"
-    }
+struct KalshiCandlestickResponse: Decodable {
+    let ticker: String
+    let candlesticks: [KalshiCandleDTO]
 }
 
 struct KalshiCandleDTO: Decodable {
     let endTs: Int64?
-    let closePrice: Double?
-    let yesPrice: Double?
+    let yesAskClose: Double?
+    let yesBidClose: Double?
+    let previousPrice: Double?
 
     enum CodingKeys: String, CodingKey {
         case endTs = "end_period_ts"
-        case closePrice = "close"
-        case yesPrice = "yes_price"
+        case yesAsk = "yes_ask"
+        case yesBid = "yes_bid"
+        case price
+    }
+
+    private enum PriceKeys: String, CodingKey {
+        case closeDollars = "close_dollars"
+        case previousDollars = "previous_dollars"
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         endTs = container.decodeFlexibleInt64(forKey: .endTs)
-        closePrice = container.decodeFlexibleDouble(forKey: .closePrice)
-        yesPrice = container.decodeFlexibleDouble(forKey: .yesPrice)
+
+        if let askContainer = try? container.nestedContainer(keyedBy: PriceKeys.self, forKey: .yesAsk) {
+            yesAskClose = askContainer.decodeFlexibleDouble(forKey: .closeDollars)
+        } else {
+            yesAskClose = nil
+        }
+
+        if let bidContainer = try? container.nestedContainer(keyedBy: PriceKeys.self, forKey: .yesBid) {
+            yesBidClose = bidContainer.decodeFlexibleDouble(forKey: .closeDollars)
+        } else {
+            yesBidClose = nil
+        }
+
+        if let priceContainer = try? container.nestedContainer(keyedBy: PriceKeys.self, forKey: .price) {
+            previousPrice = priceContainer.decodeFlexibleDouble(forKey: .previousDollars)
+        } else {
+            previousPrice = nil
+        }
+    }
+
+    var bestPrice: Double? {
+        yesAskClose ?? yesBidClose ?? previousPrice
     }
 }
 
@@ -180,6 +198,7 @@ struct KalshiAPIClient: Sendable {
             components.queryItems = queryItems
 
             let response: KalshiOpenEventsResponse = try await get(url: components.url!)
+            guard !response.events.isEmpty else { break }
             let markets = response.events.flatMap { event in
                 (event.markets ?? [])
                     .filter { market in
@@ -190,30 +209,26 @@ struct KalshiAPIClient: Sendable {
             }
             allMarkets.append(contentsOf: markets)
             cursor = response.cursor
-        } while cursor != nil
+        } while cursor != nil && !cursor!.isEmpty
 
         return allMarkets
     }
 
-    func fetchTrend(for marketTicker: String, window: TrendWindow) async throws -> MarketTrend {
+    func fetchTrend(for marketTicker: String, seriesTicker: String, window: TrendWindow) async throws -> MarketTrend {
         let endDate = Date()
         let startDate = endDate.addingTimeInterval(-window.duration)
-        var components = URLComponents(url: baseURL.appendingPathComponent("markets/candlesticks"), resolvingAgainstBaseURL: false)!
+        let path = "series/\(seriesTicker)/markets/\(marketTicker)/candlesticks"
+        var components = URLComponents(url: baseURL.appendingPathComponent(path), resolvingAgainstBaseURL: false)!
         components.queryItems = [
-            URLQueryItem(name: "market_tickers", value: marketTicker),
             URLQueryItem(name: "start_ts", value: String(Int64(startDate.timeIntervalSince1970))),
             URLQueryItem(name: "end_ts", value: String(Int64(endDate.timeIntervalSince1970))),
-            URLQueryItem(name: "period_interval", value: String(window.intervalMinutes)),
-            URLQueryItem(name: "include_latest_before_start", value: "true")
+            URLQueryItem(name: "period_interval", value: String(window.intervalMinutes))
         ]
 
-        let response: KalshiBatchCandlestickResponse = try await get(url: components.url!)
-        let series = response.candlesticks.first(where: { $0.marketTicker == marketTicker })
+        let response: KalshiCandlestickResponse = try await get(url: components.url!)
 
-        let points = (series?.series ?? []).compactMap { candle -> TrendPoint? in
-            let timestamp = candle.endTs
-            let rawPrice = candle.closePrice ?? candle.yesPrice
-            guard let timestamp, let rawPrice else { return nil }
+        let points = response.candlesticks.compactMap { candle -> TrendPoint? in
+            guard let timestamp = candle.endTs, let rawPrice = candle.bestPrice else { return nil }
             let normalizedPrice = rawPrice > 1 ? rawPrice : rawPrice * 100
             return TrendPoint(date: Date(timeIntervalSince1970: TimeInterval(timestamp)), value: normalizedPrice)
         }.sorted { $0.date < $1.date }
@@ -266,8 +281,6 @@ private extension KalshiMarketDTO {
             .compactMap(URL.init(string:))
             .first
 
-        let description = [rulesPrimary, rulesSecondary].compactMap { $0 }.joined(separator: "\n\n").nilIfEmpty
-
         return MarketSummary(
             ticker: ticker,
             eventTicker: event.eventTicker,
@@ -278,7 +291,6 @@ private extension KalshiMarketDTO {
             noLabel: noLabel,
             eventTitle: event.title,
             eventSubtitle: event.subtitle,
-            description: description,
             category: event.category,
             status: status ?? "active",
             lastPrice: normalizeUnitPrice(lastPrice),

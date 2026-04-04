@@ -42,17 +42,12 @@ struct TruthPulseMarkView: View {
 
 struct TruthPulseWordmarkView: View {
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(alignment: .center, spacing: 10) {
             TruthPulseMarkView(size: 34, lineWidth: 3.4)
 
-            VStack(alignment: .leading, spacing: 1) {
-                Text("TruthPulse")
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
-                    .foregroundStyle(Color.truthPulseInk)
-                Text("truthpulse.co")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(Color.truthPulseMuted)
-            }
+            Text("TruthPulse")
+                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .foregroundStyle(Color.truthPulseInk)
         }
     }
 }

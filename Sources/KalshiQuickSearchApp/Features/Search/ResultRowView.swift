@@ -9,22 +9,11 @@ struct ResultRowView: View {
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: 12) {
-                CachedAsyncImage(url: result.market.imageURL) {
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(Color.kalshiMintSoft)
-                        .overlay(
-                            Image(systemName: "chart.line.uptrend.xyaxis")
-                                .foregroundStyle(Color.kalshiMint)
-                        )
-                }
-                .frame(width: 42, height: 42)
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-
                 VStack(alignment: .leading, spacing: 4) {
                     Text(result.market.title.highlightAttributedString(ranges: result.titleHighlights))
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(Color.kalshiInk)
-                        .lineLimit(1)
+                        .lineLimit(2)
 
                     if let subtitle = secondaryLine {
                         Text(subtitle.highlightAttributedString(ranges: result.subtitleHighlights))
@@ -42,8 +31,8 @@ struct ResultRowView: View {
 
                 Spacer(minLength: 8)
 
-                VStack(alignment: .trailing, spacing: 10) {
-                    VStack(alignment: .trailing, spacing: 3) {
+                VStack(alignment: .trailing, spacing: 6) {
+                    HStack(spacing: 4) {
                         Text(result.emphasizedOdds.map { "\($0)%" } ?? "--")
                             .font(.system(size: 20, weight: .bold))
                             .foregroundStyle(Color.kalshiInk)
@@ -51,14 +40,14 @@ struct ResultRowView: View {
                         Text(result.emphasizedOutcomeLabel)
                             .font(.system(size: 10, weight: .semibold))
                             .foregroundStyle(Color.kalshiMint)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 3)
                             .background(Color.kalshiMintSoft)
                             .clipShape(Capsule())
                     }
 
                     SparklineView(trend: trend, lineWidth: 2)
-                        .frame(width: 68, height: 24)
+                        .frame(width: 80, height: 28)
                 }
             }
             .padding(.horizontal, 12)
@@ -80,7 +69,8 @@ struct ResultRowView: View {
         if let subtitle = result.market.subtitle, !subtitle.isEmpty {
             return subtitle
         }
-        if let eventTitle = result.market.eventTitle, !eventTitle.isEmpty {
+        if let eventTitle = result.market.eventTitle, !eventTitle.isEmpty,
+           eventTitle != result.market.title {
             return eventTitle
         }
         return [result.market.yesLabel, result.market.noLabel].compactMap { $0 }.joined(separator: " / ").nilIfEmpty

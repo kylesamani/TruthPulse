@@ -9,6 +9,8 @@ final class TruthPulseAppDelegate: NSObject, NSApplicationDelegate, NSPopoverDel
     private var statusItem: NSStatusItem?
     private let statusMenu = NSMenu()
     private var cancellables = Set<AnyCancellable>()
+    private let hotkeyManager = HotkeyManager()
+    private var recorderController: HotkeyRecorderWindowController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         do {
@@ -17,8 +19,8 @@ final class TruthPulseAppDelegate: NSObject, NSApplicationDelegate, NSPopoverDel
             self.state = state
             configurePopover(with: state)
             configureStatusItem()
+            registerHotkey()
             observeState(state)
-            state.start()
         } catch {
             fatalError("Failed to initialize TruthPulse: \(error)")
         }
@@ -40,10 +42,17 @@ final class TruthPulseAppDelegate: NSObject, NSApplicationDelegate, NSPopoverDel
         button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         statusItem = item
 
+        let hotkeyItem = NSMenuItem(title: "Set Shortcut (\(HotkeyStorage.load().displayString))", action: #selector(showHotkeyRecorder), keyEquivalent: "")
+        hotkeyItem.target = self
+
         let quitItem = NSMenuItem(title: "Quit TruthPulse", action: #selector(quitApp(_:)), keyEquivalent: "q")
         quitItem.target = self
+
+        let feedbackItem = NSMenuItem(title: "Provide feedback/report bugs", action: #selector(openFeedback), keyEquivalent: "")
+        feedbackItem.target = self
+
         statusMenu.autoenablesItems = false
-        statusMenu.items = [quitItem]
+        statusMenu.items = [hotkeyItem, feedbackItem, .separator(), quitItem]
     }
 
     private func configurePopover(with state: AppState) {
@@ -56,30 +65,51 @@ final class TruthPulseAppDelegate: NSObject, NSApplicationDelegate, NSPopoverDel
     }
 
     private func observeState(_ state: AppState) {
-        state.$results
-            .receive(on: RunLoop.main)
-            .sink { [weak self, weak state] _ in
-                guard let self, let state else { return }
-                self.applyPopoverSize(for: state.panelMetrics)
-            }
-            .store(in: &cancellables)
-
-        state.$query
-            .receive(on: RunLoop.main)
-            .sink { [weak self, weak state] _ in
-                guard let self, let state else { return }
-                self.applyPopoverSize(for: state.panelMetrics)
-            }
-            .store(in: &cancellables)
-
-        state.$errorMessage
-            .receive(on: RunLoop.main)
-            .sink { [weak self, weak state] _ in
-                guard let self, let state else { return }
-                self.applyPopoverSize(for: state.panelMetrics)
-            }
-            .store(in: &cancellables)
+        Publishers.CombineLatest3(
+            state.$results.map { _ in () }.eraseToAnyPublisher(),
+            state.$query.map { _ in () }.eraseToAnyPublisher(),
+            state.$errorMessage.map { _ in () }.eraseToAnyPublisher()
+        )
+        .debounce(for: .milliseconds(16), scheduler: RunLoop.main)
+        .sink { [weak self, weak state] _ in
+            guard let self, let state else { return }
+            self.applyPopoverSize(for: state.panelMetrics)
+        }
+        .store(in: &cancellables)
     }
+
+    // MARK: - Global Hotkey
+
+    private func registerHotkey() {
+        let hotkey = HotkeyStorage.load()
+        hotkeyManager.register(hotkey) { [weak self] in
+            self?.togglePopover(nil)
+        }
+    }
+
+    @objc
+    private func showHotkeyRecorder() {
+        if popover.isShown {
+            popover.performClose(nil)
+        }
+        let current = HotkeyStorage.load()
+        recorderController = HotkeyRecorderWindowController(current: current) { [weak self] newHotkey in
+            HotkeyStorage.save(newHotkey)
+            self?.registerHotkey()
+            self?.updateHotkeyMenuItem()
+        }
+        NSApp.activate(ignoringOtherApps: true)
+        recorderController?.showWindow(nil)
+        recorderController?.window?.makeKeyAndOrderFront(nil)
+    }
+
+    private func updateHotkeyMenuItem() {
+        if let item = statusMenu.items.first {
+            item.title = "Set Shortcut (\(HotkeyStorage.load().displayString))"
+        }
+    }
+
+    // MARK: - Popover
 
     @objc
     private func togglePopover(_ sender: Any?) {
@@ -100,11 +130,19 @@ final class TruthPulseAppDelegate: NSObject, NSApplicationDelegate, NSPopoverDel
         }
 
         if let state {
-            state.start()
+            state.onPopoverOpen()
             applyPopoverSize(for: state.panelMetrics)
         }
+        NSApp.activate(ignoringOtherApps: true)
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-        popover.contentViewController?.view.window?.becomeKey()
+        popover.contentViewController?.view.window?.makeKeyAndOrderFront(nil)
+    }
+
+    @objc
+    private func openFeedback() {
+        if let url = URL(string: "https://mail.google.com/mail/?view=cm&to=iam@kylesamani.com&su=TruthPulse%20Feedback") {
+            NSWorkspace.shared.open(url)
+        }
     }
 
     @objc
@@ -114,7 +152,6 @@ final class TruthPulseAppDelegate: NSObject, NSApplicationDelegate, NSPopoverDel
 
     private func applyPopoverSize(for metrics: SearchPanelMetrics) {
         popover.contentSize = NSSize(width: metrics.width, height: metrics.height)
-        popover.contentViewController?.view.frame = NSRect(origin: .zero, size: popover.contentSize)
     }
 
     func popoverWillShow(_ notification: Notification) {

@@ -20,12 +20,13 @@ enum TrendWindow: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
+    /// Kalshi only accepts period_interval values of 1, 60, or 1440.
     var intervalMinutes: Int {
         switch self {
         case .oneDay:
-            60
+            1
         case .sevenDays:
-            240
+            60
         case .thirtyDays:
             1_440
         }

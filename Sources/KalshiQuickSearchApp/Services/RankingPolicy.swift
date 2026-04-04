@@ -42,7 +42,6 @@ struct RankingPolicy: Sendable {
             (.subtitle, market.subtitle ?? ""),
             (.outcome, [market.yesLabel, market.noLabel].compactMap { $0 }.joined(separator: " ")),
             (.eventTitle, [market.eventTitle, market.eventSubtitle].compactMap { $0 }.joined(separator: " ")),
-            (.description, market.description ?? ""),
             (.category, market.category ?? "")
         ]
 
