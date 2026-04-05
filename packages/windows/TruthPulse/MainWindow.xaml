@@ -1,0 +1,84 @@
+<Window
+    x:Class="TruthPulse.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="TruthPulse"
+    Width="520"
+    Height="580">
+
+    <Grid>
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#F0FFF8" Offset="0.0" />
+                <GradientStop Color="#FFFFFF" Offset="1.0" />
+            </LinearGradientBrush>
+        </Grid.Background>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Grid Grid.Row="0" Padding="20,16,20,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="TruthPulse" FontSize="18" FontWeight="Bold"
+                           Foreground="#1A1A1A" />
+                <TextBlock Text=".co" FontSize="18" FontWeight="Normal"
+                           Foreground="#10B981" Margin="0,0,12,0" />
+                <TextBlock Text="powered by Kalshi" FontSize="11"
+                           Foreground="#999999" VerticalAlignment="Center"
+                           Margin="0,2,0,0" />
+            </StackPanel>
+
+            <ComboBox x:Name="WindowComboBox" Grid.Column="1"
+                      SelectedIndex="1" Width="80"
+                      SelectionChanged="WindowComboBox_SelectionChanged">
+                <ComboBoxItem Content="1D" />
+                <ComboBoxItem Content="7D" />
+                <ComboBoxItem Content="30D" />
+            </ComboBox>
+        </Grid>
+
+        <!-- Search input -->
+        <Grid Grid.Row="1" Padding="20,4,20,12">
+            <TextBox x:Name="SearchBox"
+                     PlaceholderText="Search all Kalshi markets."
+                     FontSize="15"
+                     Padding="12,10"
+                     CornerRadius="12"
+                     TextChanged="SearchBox_TextChanged"
+                     KeyDown="SearchBox_KeyDown" />
+        </Grid>
+
+        <!-- Results list (items added programmatically) -->
+        <ListView x:Name="ResultsListView" Grid.Row="2"
+                  Padding="8,0,8,0"
+                  SelectionMode="Single"
+                  SelectionChanged="ResultsListView_SelectionChanged"
+                  IsItemClickEnabled="True"
+                  ItemClick="ResultsListView_ItemClick" />
+
+        <!-- Status bar -->
+        <Grid Grid.Row="3" Padding="20,8,20,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock x:Name="SyncStatusText" Grid.Column="0"
+                       FontSize="11" Foreground="#999999"
+                       VerticalAlignment="Center" />
+            <TextBlock x:Name="ResultCountText" Grid.Column="1"
+                       FontSize="11" Foreground="#999999"
+                       VerticalAlignment="Center" />
+        </Grid>
+    </Grid>
+</Window>
