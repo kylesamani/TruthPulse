@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import KalshiQuickSearchApp
+@testable import TruthPulse
 
 struct RankingPolicyTests {
     @Test

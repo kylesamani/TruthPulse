@@ -1,46 +1,61 @@
-# Kalshi Quick Search
+# TruthPulse
 
-Native macOS-first quick lookup for live Kalshi markets.
+Instant search across all open Kalshi prediction markets. Live odds, trend data, keyboard-driven. Powered by Kalshi.
 
-## What is implemented
+## Download
 
-- Native SwiftUI app with both:
-  - a launch window that opens directly into search
-  - a macOS menu bar extra for fast re-access
-- Direct Kalshi REST integration with no backend
-- Local SQLite + FTS5 search index for open markets
-- Search ranking that blends:
-  - title and outcome relevance
-  - event and description matching
-  - liquidity / volume / recency signals
-- Keyboard-first search flow:
-  - up/down arrows change selection
-  - return opens the selected market in the default browser
-- Result rows with:
-  - current odds
-  - rich media when available
-  - compact sparkline
-- Detail rail with:
-  - `1D / 7D / 30D` selector
-  - larger trend view
-  - open-in-browser action
-- Polling refresh and lazy trend fetching
-- Disk-backed image cache
+| Platform | Link |
+|----------|------|
+| **macOS** | [Download TruthPulse.dmg](https://github.com/kylesamani/TruthPulse/releases/latest/download/TruthPulse.dmg) |
+| **Windows** | [Build from source](packages/windows) (untested — see instructions below) |
+| **Raycast** | [TruthPulse on Raycast Store](https://www.raycast.com/kyle_samani/truthpulse) |
 
-## Run locally
+## Features
 
-Open `Package.swift` in Xcode, then run the `KalshiQuickSearchApp` executable target.
+- Search 10,000+ open prediction markets by title, category, or outcome
+- Live odds displayed inline for every result
+- Trend data (1D / 7D / 30D) with price delta
+- Local cache for instant results, background sync with Kalshi API
+- Open any market on kalshi.com with one keystroke
+- Configurable global hotkey (default: Cmd+Shift+K on macOS)
 
-From Terminal:
+## Screenshots
 
+*Coming soon*
+
+## Source Code
+
+Each platform is a self-contained implementation under `packages/`:
+
+| Package | Stack |
+|---------|-------|
+| [`packages/mac`](packages/mac) | Swift 6 / SwiftUI / AppKit — macOS menu bar app |
+| [`packages/windows`](packages/windows) | C# / WinUI 3 / .NET 8 — Windows system tray app |
+| [`packages/raycast`](packages/raycast) | TypeScript / React — Raycast extension |
+
+## Build from source
+
+**macOS:**
 ```bash
+cd packages/mac
 swift build
-swift run KalshiQuickSearchApp
+swift run TruthPulse
 ```
 
-## Current notes
+**Windows:**
+```bash
+cd packages/windows
+dotnet build
+dotnet run --project TruthPulse
+```
 
-- The app uses Kalshi public REST endpoints and assumes public market data remains accessible without API auth.
-- The search index stores only `open` markets.
-- URL handling uses Kalshi-provided URLs when present, with a Kalshi browse fallback when a direct page URL is unavailable.
-- The current app is implemented as a Swift package for fast setup. If we want a polished distributable `.app` with background-only menu bar behavior, the next step is to promote this into a full Xcode app target with bundle metadata and launch-agent polish.
+**Raycast:**
+```bash
+cd packages/raycast
+npm install
+npm run dev
+```
+
+## License
+
+MIT

@@ -68,7 +68,7 @@ public partial class App : Application
     {
         _trayIcon = new TaskbarIcon
         {
-            ToolTipText = "TruthPulse - Kalshi Quick Search"
+            ToolTipText = "TruthPulse"
         };
 
         var contextMenu = new MenuFlyout();

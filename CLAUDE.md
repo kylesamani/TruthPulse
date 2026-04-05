@@ -1,15 +1,25 @@
-# TruthPulse — Kalshi Quick Search
+# TruthPulse
 
 ## What This Is
-Native macOS menu bar app for instant Kalshi prediction market lookup. Keyboard-driven search, live odds, trend sparklines, zero backend.
+Instant search across all open Kalshi prediction markets. Live odds, trend data, keyboard-driven. Zero backend.
 
-## Commands
-- `swift build` — Build the project
-- `swift run KalshiQuickSearchApp` — Run the app
-- `swift test` — Run tests
-- `swift package clean` — Clean build artifacts
+Available as a macOS menu bar app, Windows system tray app, and Raycast extension.
 
-## Architecture
+## Repository Structure
+
+```
+packages/
+├── mac/          # macOS menu bar app (Swift/SwiftUI)
+├── windows/      # Windows system tray app (C#/WinUI 3/.NET 8)
+└── raycast/      # Raycast extension (TypeScript/React)
+```
+
+## macOS App (`packages/mac/`)
+
+### Commands
+- `cd packages/mac && swift build` — Build
+- `cd packages/mac && swift run TruthPulse` — Run
+- `cd packages/mac && swift test` — Test
 
 ### Stack
 - **Language**: Swift 6.0
@@ -21,17 +31,16 @@ Native macOS menu bar app for instant Kalshi prediction market lookup. Keyboard-
 
 ### Structure
 ```
-Sources/KalshiQuickSearchApp/
+packages/mac/Sources/TruthPulse/
 ├── App/
 │   ├── AppState.swift              # Central @Published state management
-│   └── TruthPulseAppDelegate.swift # Menu bar setup, popover, app lifecycle
+│   ├── TruthPulseAppDelegate.swift # Menu bar setup, popover, app lifecycle
+│   └── GlobalHotkey.swift          # Configurable global keyboard shortcut
 ├── Features/Search/
-│   ├── QuickSearchView.swift       # Main UI container (search + results + detail)
+│   ├── QuickSearchView.swift       # Main UI container (search + results)
 │   ├── SearchFieldView.swift       # Input field with keyboard handling
 │   ├── ResultRowView.swift         # Individual market result card
-│   ├── DetailPanelView.swift       # Right-side detail panel with large sparkline
-│   ├── SparklineView.swift         # Trend sparkline chart
-│   └── CachedAsyncImage.swift      # Image loading with disk cache
+│   └── SparklineView.swift         # Trend sparkline chart
 ├── Models/
 │   ├── MarketModels.swift          # MarketSummary, SearchResult, HighlightRange
 │   ├── TrendModels.swift           # TrendWindow, MarketTrend, TrendPoint
@@ -47,25 +56,29 @@ Sources/KalshiQuickSearchApp/
     └── Formatting.swift            # Number/date formatters
 ```
 
-### Key Design Decisions
+## Windows App (`packages/windows/`)
+
+### Commands
+- `cd packages/windows && dotnet build`
+- `cd packages/windows && dotnet run --project TruthPulse`
+- `cd packages/windows && dotnet publish -c Release -r win-x64 --self-contained`
+
+### Stack
+- C# / WinUI 3 / .NET 8, system tray with global hotkey
+
+## Raycast Extension (`packages/raycast/`)
+
+### Commands
+- `cd packages/raycast && npm install && npm run dev`
+- `cd packages/raycast && npm run build`
+- `cd packages/raycast && npm run lint`
+
+### Stack
+- TypeScript/React, Raycast SDK, single-command extension
+
+## Key Design Decisions
 - **No backend**: All data fetched directly from Kalshi public API
 - **Local search index**: Markets cached locally for instant typeahead
 - **Lazy trend loading**: Candlestick data fetched on selection, not upfront
-- **Actor-based SearchService**: Thread-safe concurrent access
 - **Field-aware ranking**: Title matches ranked higher than description matches, boosted by volume/liquidity
-
-### Data Flow
-1. App boots → loads cached markets from disk (instant search available)
-2. Background poll fetches fresh market data from Kalshi API
-3. User types → local filtering + ranking against cached markets
-4. User selects result → trend data fetched lazily, detail panel shown
-5. Enter key → opens market on kalshi.com in default browser
-
-## Distribution
-- Built `.app` lives in `dist/TruthPulse.app`
-- Brand assets in `Assets/Brand/`
-
-## Roadmap
-- v0: macOS menu bar app (current)
-- v1: Raycast extension + Windows system tray app
-- Future: iOS Spotlight integration, Android widget
+- **Three independent ports**: Each platform is self-contained, no shared code

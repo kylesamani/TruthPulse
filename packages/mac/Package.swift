@@ -2,23 +2,23 @@
 import PackageDescription
 
 let package = Package(
-    name: "KalshiQuickSearch",
+    name: "TruthPulse",
     platforms: [
         .macOS(.v14)
     ],
     products: [
         .executable(
-            name: "KalshiQuickSearchApp",
-            targets: ["KalshiQuickSearchApp"]
+            name: "TruthPulse",
+            targets: ["TruthPulse"]
         )
     ],
     targets: [
         .executableTarget(
-            name: "KalshiQuickSearchApp"
+            name: "TruthPulse"
         ),
         .testTarget(
-            name: "KalshiQuickSearchTests",
-            dependencies: ["KalshiQuickSearchApp"]
+            name: "TruthPulseTests",
+            dependencies: ["TruthPulse"]
         )
     ]
 )

@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct KalshiQuickSearchApp: App {
+struct TruthPulseApp: App {
     @NSApplicationDelegateAdaptor(TruthPulseAppDelegate.self) private var appDelegate
 
     var body: some Scene {

@@ -112,7 +112,7 @@ actor SearchService {
             appropriateFor: nil,
             create: true
         )
-        let directory = base.appendingPathComponent("KalshiQuickSearch", isDirectory: true)
+        let directory = base.appendingPathComponent("TruthPulse", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         return directory
     }
