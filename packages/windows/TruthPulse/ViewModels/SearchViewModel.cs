@@ -4,9 +4,9 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.UI.Dispatching;
 using TruthPulse.Models;
 using TruthPulse.Services;
 
@@ -15,7 +15,6 @@ namespace TruthPulse.ViewModels;
 public partial class SearchViewModel : ObservableObject
 {
     private readonly SearchService _searchService;
-    private readonly DispatcherQueue _dispatcherQueue;
     private Timer? _debounceTimer;
     private const int DebounceMs = 80;
     private const int MinQueryLength = 4;
@@ -48,19 +47,14 @@ public partial class SearchViewModel : ObservableObject
 
     public bool HasCachedMarkets => _searchService.HasCachedMarkets;
 
-    /// <summary>
-    /// Raised after Results collection is updated on the UI thread.
-    /// MainWindow subscribes to rebuild the ListView.
-    /// </summary>
     public event Action? ResultsChanged;
 
-    public SearchViewModel(DispatcherQueue dispatcherQueue)
-        : this(new SearchService(), dispatcherQueue) { }
+    public SearchViewModel()
+        : this(new SearchService()) { }
 
-    public SearchViewModel(SearchService searchService, DispatcherQueue dispatcherQueue)
+    public SearchViewModel(SearchService searchService)
     {
         _searchService = searchService;
-        _dispatcherQueue = dispatcherQueue;
     }
 
     partial void OnQueryChanged(string value)
@@ -95,7 +89,7 @@ public partial class SearchViewModel : ObservableObject
             results = _searchService.Search(trimmed);
         }
 
-        _dispatcherQueue.TryEnqueue(() =>
+        Application.Current?.Dispatcher.Invoke(() =>
         {
             Results.Clear();
             foreach (var r in results)

@@ -1,46 +1,43 @@
 using System;
-using Microsoft.UI;
-using Microsoft.UI.Text;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
+using System.Collections.Generic;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
 using TruthPulse.Models;
 using TruthPulse.ViewModels;
-using Windows.System;
 
 namespace TruthPulse;
 
-public sealed partial class MainWindow : Window
+public partial class MainWindow : Window
 {
     private readonly SearchViewModel _viewModel;
 
     public MainWindow()
     {
         InitializeComponent();
-        ExtendsContentIntoTitleBar = true;
 
-        _viewModel = new SearchViewModel(DispatcherQueue);
+        _viewModel = new SearchViewModel();
         _viewModel.PropertyChanged += ViewModel_PropertyChanged;
         _viewModel.ResultsChanged += OnResultsChanged;
 
-        if (AppWindow != null)
+        Loaded += async (_, _) =>
         {
-            AppWindow.TitleBar.ExtendsContentIntoTitleBar = true;
-            AppWindow.Resize(new Windows.Graphics.SizeInt32(520, 580));
-        }
+            FocusSearch();
+            await _viewModel.OnPopoverOpenAsync();
+        };
     }
 
-    public void BringToFront()
+    public void FocusSearch()
     {
-        Activate();
-        SearchBox?.Focus(FocusState.Programmatic);
-        _ = _viewModel.OnPopoverOpenAsync();
+        SearchBox.Focus();
+        Keyboard.Focus(SearchBox);
     }
 
     private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        DispatcherQueue.TryEnqueue(() =>
+        Dispatcher.Invoke(() =>
         {
             switch (e.PropertyName)
             {
@@ -57,36 +54,37 @@ public sealed partial class MainWindow : Window
 
     private void OnResultsChanged()
     {
-        // Already on UI thread (dispatched by ViewModel)
-        RebuildResultsList();
+        Dispatcher.Invoke(RebuildResultsList);
     }
 
     private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
     {
         _viewModel.Query = SearchBox.Text;
-        // Results will be rebuilt via the ResultsChanged event after debounce
+        SearchPlaceholder.Visibility = string.IsNullOrEmpty(SearchBox.Text)
+            ? Visibility.Visible
+            : Visibility.Collapsed;
     }
 
-    private void SearchBox_KeyDown(object sender, KeyRoutedEventArgs e)
+    private void SearchBox_KeyDown(object sender, KeyEventArgs e)
     {
         switch (e.Key)
         {
-            case VirtualKey.Down:
+            case Key.Down:
                 _viewModel.MoveSelection(1);
                 UpdateSelectionHighlight();
                 e.Handled = true;
                 break;
-            case VirtualKey.Up:
+            case Key.Up:
                 _viewModel.MoveSelection(-1);
                 UpdateSelectionHighlight();
                 e.Handled = true;
                 break;
-            case VirtualKey.Enter:
+            case Key.Enter:
                 _viewModel.OpenSelectedMarket();
                 e.Handled = true;
                 break;
-            case VirtualKey.Escape:
-                AppWindow?.Hide();
+            case Key.Escape:
+                Hide();
                 e.Handled = true;
                 break;
         }
@@ -94,6 +92,7 @@ public sealed partial class MainWindow : Window
 
     private void WindowComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        if (_viewModel == null) return;
         _viewModel.SelectedWindow = WindowComboBox.SelectedIndex switch
         {
             0 => TrendWindow.OneDay,
@@ -103,27 +102,27 @@ public sealed partial class MainWindow : Window
         };
     }
 
-    private void ResultsListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void ResultsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (ResultsListView.SelectedIndex >= 0 && ResultsListView.SelectedIndex < _viewModel.Results.Count)
+        if (ResultsListBox.SelectedIndex >= 0 && ResultsListBox.SelectedIndex < _viewModel.Results.Count)
         {
-            _viewModel.SelectedResult = _viewModel.Results[ResultsListView.SelectedIndex];
+            _viewModel.SelectedResult = _viewModel.Results[ResultsListBox.SelectedIndex];
         }
     }
 
-    private void ResultsListView_ItemClick(object sender, ItemClickEventArgs e)
+    private void ResultsListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
     {
         _viewModel.OpenSelectedMarket();
     }
 
     private void RebuildResultsList()
     {
-        ResultsListView.Items.Clear();
+        ResultsListBox.Items.Clear();
 
         foreach (var result in _viewModel.Results)
         {
             var panel = CreateResultPanel(result);
-            ResultsListView.Items.Add(panel);
+            ResultsListBox.Items.Add(panel);
         }
 
         ResultCountText.Text = _viewModel.Results.Count > 0
@@ -138,8 +137,8 @@ public sealed partial class MainWindow : Window
         if (_viewModel.SelectedResult != null)
         {
             var idx = _viewModel.Results.IndexOf(_viewModel.SelectedResult);
-            if (idx >= 0 && idx < ResultsListView.Items.Count)
-                ResultsListView.SelectedIndex = idx;
+            if (idx >= 0 && idx < ResultsListBox.Items.Count)
+                ResultsListBox.SelectedIndex = idx;
         }
     }
 
@@ -147,11 +146,7 @@ public sealed partial class MainWindow : Window
     {
         var market = result.Market;
 
-        var grid = new Grid
-        {
-            Padding = new Thickness(12, 10, 12, 10),
-            ColumnSpacing = 12
-        };
+        var grid = new Grid { Margin = new Thickness(12, 10, 12, 10) };
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
@@ -164,9 +159,9 @@ public sealed partial class MainWindow : Window
             FontSize = 14,
             FontWeight = FontWeights.SemiBold,
             TextWrapping = TextWrapping.Wrap,
-            MaxLines = 2,
+            MaxHeight = 40,
             TextTrimming = TextTrimming.CharacterEllipsis,
-            Foreground = new SolidColorBrush(ColorHelper.FromArgb(255, 26, 26, 26))
+            Foreground = new SolidColorBrush(Color.FromRgb(26, 26, 26))
         };
         leftStack.Children.Add(titleBlock);
 
@@ -181,9 +176,8 @@ public sealed partial class MainWindow : Window
             {
                 Text = subtitleText,
                 FontSize = 11,
-                Foreground = new SolidColorBrush(ColorHelper.FromArgb(255, 128, 128, 128)),
+                Foreground = new SolidColorBrush(Color.FromRgb(128, 128, 128)),
                 TextTrimming = TextTrimming.CharacterEllipsis,
-                MaxLines = 1,
                 Margin = new Thickness(0, 2, 0, 0)
             };
             leftStack.Children.Add(subtitleBlock);
@@ -201,7 +195,7 @@ public sealed partial class MainWindow : Window
             {
                 Text = volumeText,
                 FontSize = 10,
-                Foreground = new SolidColorBrush(ColorHelper.FromArgb(255, 170, 170, 170)),
+                Foreground = new SolidColorBrush(Color.FromRgb(170, 170, 170)),
                 Margin = new Thickness(0, 2, 0, 0)
             };
             leftStack.Children.Add(volumeBlock);
@@ -210,7 +204,7 @@ public sealed partial class MainWindow : Window
         Grid.SetColumn(leftStack, 0);
         grid.Children.Add(leftStack);
 
-        // Right: odds badge using Border (StackPanel doesn't have CornerRadius/Background)
+        // Right: odds badge
         if (result.EmphasizedOdds.HasValue)
         {
             var badgeContent = new StackPanel
@@ -224,7 +218,7 @@ public sealed partial class MainWindow : Window
                 Text = $"{result.EmphasizedOdds}%",
                 FontSize = 14,
                 FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(Colors.White)
+                Foreground = Brushes.White
             };
             badgeContent.Children.Add(oddsText);
 
@@ -232,7 +226,7 @@ public sealed partial class MainWindow : Window
             {
                 Text = $" {result.EmphasizedOutcomeLabel}",
                 FontSize = 11,
-                Foreground = new SolidColorBrush(ColorHelper.FromArgb(255, 220, 255, 240)),
+                Foreground = new SolidColorBrush(Color.FromRgb(220, 255, 240)),
                 VerticalAlignment = VerticalAlignment.Center
             };
             badgeContent.Children.Add(labelText);
@@ -241,7 +235,7 @@ public sealed partial class MainWindow : Window
             {
                 Padding = new Thickness(8, 4, 8, 4),
                 CornerRadius = new CornerRadius(8),
-                Background = new SolidColorBrush(ColorHelper.FromArgb(255, 16, 185, 129)),
+                Background = new SolidColorBrush(Color.FromRgb(16, 185, 129)),
                 VerticalAlignment = VerticalAlignment.Center,
                 Child = badgeContent
             };

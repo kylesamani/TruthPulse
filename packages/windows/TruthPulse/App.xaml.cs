@@ -4,10 +4,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.Json;
-using System.Windows.Input;
-using H.NotifyIcon;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
+using System.Windows;
+using System.Windows.Interop;
+using Hardcodet.Wpf.TaskbarNotification;
 
 namespace TruthPulse;
 
@@ -33,6 +32,7 @@ public partial class App : Application
     private const uint MOD_CONTROL = 0x0002;
     private const uint MOD_SHIFT = 0x0004;
     private const uint VK_K = 0x4B;
+    private const int WM_HOTKEY = 0x0312;
 
     private HotkeyConfig _hotkeyConfig = new()
     {
@@ -40,28 +40,41 @@ public partial class App : Application
         Key = VK_K
     };
 
-    public Microsoft.UI.Dispatching.DispatcherQueue? AppDispatcherQueue =>
-        _mainWindow?.DispatcherQueue;
+    private HwndSource? _hwndSource;
 
     public App()
     {
         Instance = this;
-        InitializeComponent();
     }
 
-    protected override void OnLaunched(LaunchActivatedEventArgs args)
+    protected override void OnStartup(StartupEventArgs e)
     {
+        base.OnStartup(e);
+
         LoadHotkeyConfig();
 
         _mainWindow = new MainWindow();
 
         SetupTrayIcon();
 
-        // Show window initially so we get a valid HWND for hotkey registration
-        _mainWindow.Activate();
+        _mainWindow.Show();
         _windowVisible = true;
 
-        RegisterGlobalHotkey();
+        // Register hotkey after window has a handle
+        var helper = new WindowInteropHelper(_mainWindow);
+        _hwndSource = HwndSource.FromHwnd(helper.Handle);
+        _hwndSource?.AddHook(WndProc);
+        RegisterHotKey(helper.Handle, HotkeyId, _hotkeyConfig.Modifiers, _hotkeyConfig.Key);
+    }
+
+    private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (msg == WM_HOTKEY && wParam.ToInt32() == HotkeyId)
+        {
+            ToggleWindow();
+            handled = true;
+        }
+        return IntPtr.Zero;
     }
 
     private void SetupTrayIcon()
@@ -71,17 +84,17 @@ public partial class App : Application
             ToolTipText = "TruthPulse"
         };
 
-        var contextMenu = new MenuFlyout();
+        var contextMenu = new System.Windows.Controls.ContextMenu();
 
-        var hotkeyItem = new MenuFlyoutItem
+        var hotkeyItem = new System.Windows.Controls.MenuItem
         {
-            Text = $"Shortcut: {FormatHotkey()}"
+            Header = $"Shortcut: {FormatHotkey()}"
         };
         contextMenu.Items.Add(hotkeyItem);
 
-        contextMenu.Items.Add(new MenuFlyoutSeparator());
+        contextMenu.Items.Add(new System.Windows.Controls.Separator());
 
-        var feedbackItem = new MenuFlyoutItem { Text = "Provide feedback / report bugs" };
+        var feedbackItem = new System.Windows.Controls.MenuItem { Header = "Provide feedback / report bugs" };
         feedbackItem.Click += (_, _) =>
         {
             var url = "https://mail.google.com/mail/?view=cm&to=iam@kylesamani.com&su=TruthPulse%20Feedback";
@@ -90,17 +103,14 @@ public partial class App : Application
         };
         contextMenu.Items.Add(feedbackItem);
 
-        contextMenu.Items.Add(new MenuFlyoutSeparator());
+        contextMenu.Items.Add(new System.Windows.Controls.Separator());
 
-        var quitItem = new MenuFlyoutItem { Text = "Quit TruthPulse" };
-        quitItem.Click += (_, _) =>
-        {
-            Shutdown();
-        };
+        var quitItem = new System.Windows.Controls.MenuItem { Header = "Quit TruthPulse" };
+        quitItem.Click += (_, _) => Shutdown();
         contextMenu.Items.Add(quitItem);
 
-        _trayIcon.ContextFlyout = contextMenu;
-        _trayIcon.LeftClickCommand = new SimpleCommand(ToggleWindow);
+        _trayIcon.ContextMenu = contextMenu;
+        _trayIcon.TrayMouseDoubleClick += (_, _) => ToggleWindow();
     }
 
     private void ToggleWindow()
@@ -109,52 +119,30 @@ public partial class App : Application
 
         if (_windowVisible)
         {
-            _mainWindow.AppWindow.Hide();
+            _mainWindow.Hide();
             _windowVisible = false;
         }
         else
         {
+            _mainWindow.Show();
             _mainWindow.Activate();
-            _mainWindow.BringToFront();
+            _mainWindow.FocusSearch();
             _windowVisible = true;
 
-            // Force foreground on Windows
-            var hwnd = GetWindowHandle();
-            if (hwnd != IntPtr.Zero)
-                SetForegroundWindow(hwnd);
+            var helper = new WindowInteropHelper(_mainWindow);
+            SetForegroundWindow(helper.Handle);
         }
     }
 
-    private void RegisterGlobalHotkey()
+    protected override void OnExit(ExitEventArgs e)
     {
-        var hwnd = GetWindowHandle();
-        if (hwnd != IntPtr.Zero)
+        if (_mainWindow != null)
         {
-            RegisterHotKey(hwnd, HotkeyId, _hotkeyConfig.Modifiers, _hotkeyConfig.Key);
+            var helper = new WindowInteropHelper(_mainWindow);
+            UnregisterHotKey(helper.Handle, HotkeyId);
         }
-    }
-
-    private IntPtr GetWindowHandle()
-    {
-        if (_mainWindow == null) return IntPtr.Zero;
-        var windowId = _mainWindow.AppWindow.Id;
-        return Microsoft.UI.Win32Interop.GetWindowFromWindowId(windowId);
-    }
-
-    public void OnHotkeyPressed()
-    {
-        ToggleWindow();
-    }
-
-    private void Shutdown()
-    {
-        var hwnd = GetWindowHandle();
-        if (hwnd != IntPtr.Zero)
-            UnregisterHotKey(hwnd, HotkeyId);
-
         _trayIcon?.Dispose();
-        _mainWindow?.Close();
-        Environment.Exit(0);
+        base.OnExit(e);
     }
 
     private string FormatHotkey()
@@ -190,18 +178,5 @@ public partial class App : Application
     {
         public uint Modifiers { get; set; } = MOD_CONTROL | MOD_SHIFT;
         public uint Key { get; set; } = VK_K;
-    }
-
-    /// <summary>
-    /// Minimal ICommand for tray icon click binding.
-    /// Named to avoid collision with CommunityToolkit.Mvvm.Input.RelayCommand.
-    /// </summary>
-    private sealed class SimpleCommand : ICommand
-    {
-        private readonly Action _execute;
-        public SimpleCommand(Action execute) => _execute = execute;
-        public event EventHandler? CanExecuteChanged;
-        public bool CanExecute(object? parameter) => true;
-        public void Execute(object? parameter) => _execute();
     }
 }
