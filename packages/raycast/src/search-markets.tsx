@@ -1,11 +1,4 @@
-import {
-  List,
-  ActionPanel,
-  Action,
-  Icon,
-  Color,
-  Cache,
-} from "@raycast/api";
+import { List, ActionPanel, Action, Icon, Color, Cache } from "@raycast/api";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 
 // ─── Models ──────────────────────────────────────────────────────────────────
@@ -50,7 +43,10 @@ interface TrendPoint {
 
 type TrendWindow = "1D" | "7D" | "30D";
 
-const TREND_CONFIG: Record<TrendWindow, { duration: number; interval: number }> = {
+const TREND_CONFIG: Record<
+  TrendWindow,
+  { duration: number; interval: number }
+> = {
   "1D": { duration: 86400, interval: 1 },
   "7D": { duration: 604800, interval: 60 },
   "30D": { duration: 2592000, interval: 1440 },
@@ -79,7 +75,10 @@ function normalizePrice(v: unknown): number | undefined {
 
 const BASE_URL = "https://api.elections.kalshi.com/trade-api/v2";
 
-function parseMarket(m: Record<string, unknown>, event?: Record<string, unknown>): MarketSummary {
+function parseMarket(
+  m: Record<string, unknown>,
+  event?: Record<string, unknown>,
+): MarketSummary {
   const lastPrice = normalizePrice(m.last_price ?? m.last_price_dollars);
   const yesAsk = normalizePrice(m.yes_ask ?? m.yes_ask_dollars);
   const yesBid = normalizePrice(m.yes_bid ?? m.yes_bid_dollars);
@@ -87,7 +86,10 @@ function parseMarket(m: Record<string, unknown>, event?: Record<string, unknown>
   const noBid = normalizePrice(m.no_bid ?? m.no_bid_dollars);
 
   const yesPrice = yesAsk ?? yesBid ?? lastPrice;
-  const noPrice = noAsk ?? noBid ?? (lastPrice != null ? Math.max(0, 1 - lastPrice) : undefined);
+  const noPrice =
+    noAsk ??
+    noBid ??
+    (lastPrice != null ? Math.max(0, 1 - lastPrice) : undefined);
 
   return {
     ticker: String(m.ticker ?? ""),
@@ -99,7 +101,10 @@ function parseMarket(m: Record<string, unknown>, event?: Record<string, unknown>
     noLabel: m.no_sub_title ? String(m.no_sub_title) : undefined,
     eventTitle: event?.title ? String(event.title) : undefined,
     eventSubtitle: event?.subtitle ? String(event.subtitle) : undefined,
-    category: (event?.category ?? m.category) ? String(event?.category ?? m.category) : undefined,
+    category:
+      (event?.category ?? m.category)
+        ? String(event?.category ?? m.category)
+        : undefined,
     status: String(m.status ?? "unknown"),
     lastPrice,
     yesPrice,
@@ -141,7 +146,9 @@ async function fetchOpenMarkets(): Promise<MarketSummary[]> {
 
     const events = data.events ?? [];
     for (const event of events) {
-      const nested = event.markets as Array<Record<string, unknown>> | undefined;
+      const nested = event.markets as
+        | Array<Record<string, unknown>>
+        | undefined;
       if (nested && Array.isArray(nested)) {
         for (const m of nested) {
           const status = String(m.status ?? "").toLowerCase();
@@ -182,7 +189,9 @@ async function fetchTrend(
 
   if (!resp.ok) return [];
 
-  const data = (await resp.json()) as { candlesticks?: Array<Record<string, unknown>> };
+  const data = (await resp.json()) as {
+    candlesticks?: Array<Record<string, unknown>>;
+  };
   const candles = data.candlesticks ?? [];
 
   return candles
@@ -252,7 +261,12 @@ const FIELD_WEIGHTS: Record<string, number> = {
   ticker: 10,
 };
 
-function scoreField(field: string, query: string, tokens: string[], weight: number): number {
+function scoreField(
+  field: string,
+  query: string,
+  tokens: string[],
+  weight: number,
+): number {
   if (!field) return 0;
   let s = 0;
   if (field === query) s += weight * 4;
@@ -300,7 +314,10 @@ function marketSignals(m: MarketSummary): number {
   );
 }
 
-function searchMarkets(index: IndexedMarket[], rawQuery: string): SearchResult[] {
+function searchMarkets(
+  index: IndexedMarket[],
+  rawQuery: string,
+): SearchResult[] {
   const query = normalizeText(rawQuery);
   if (query.length < 4) return [];
 
@@ -379,7 +396,11 @@ function formatCompact(n: number): string {
 
 function formatDate(d: Date | undefined): string {
   if (!d) return "N/A";
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 function oddsColor(matchedOutcome: "yes" | "no" | undefined): Color {
@@ -429,13 +450,19 @@ function isCacheStale(): boolean {
 function saveMarkets(markets: MarketSummary[]): void {
   cache.set(
     CACHE_KEY,
-    JSON.stringify({ savedAt: new Date().toISOString(), markets } as CachedMarkets),
+    JSON.stringify({
+      savedAt: new Date().toISOString(),
+      markets,
+    } as CachedMarkets),
   );
 }
 
 // ─── Trend Cache (in-memory) ─────────────────────────────────────────────────
 
-const trendCache = new Map<string, { points: TrendPoint[]; fetchedAt: number }>();
+const trendCache = new Map<
+  string,
+  { points: TrendPoint[]; fetchedAt: number }
+>();
 const TREND_TTL_MS = 5 * 60_000;
 
 function trendCacheKey(ticker: string, window: TrendWindow): string {
@@ -486,7 +513,9 @@ function MarketDetail({
   }, [m.ticker, m.seriesTicker, trendWindow]);
 
   const oddsText =
-    result.emphasizedOdds != null ? `${result.emphasizedOdds}% ${result.emphasizedOutcomeLabel}` : "N/A";
+    result.emphasizedOdds != null
+      ? `${result.emphasizedOdds}% ${result.emphasizedOutcomeLabel}`
+      : "N/A";
 
   let trendDelta = "";
   if (trend && trend.length >= 2) {
@@ -499,14 +528,14 @@ function MarketDetail({
 
   const vol = Math.max(m.volume24h ?? 0, m.volume ?? 0);
 
-  const markdown = loading ? "Loading trend data..." : "";
-
   const metadataLines = [
     `**Odds:** ${oddsText}`,
     "",
     `**Volume:** ${formatCompact(vol)}`,
     m.liquidity != null ? `**Liquidity:** ${formatCompact(m.liquidity)}` : "",
-    m.openInterest != null ? `**Open Interest:** ${formatCompact(m.openInterest)}` : "",
+    m.openInterest != null
+      ? `**Open Interest:** ${formatCompact(m.openInterest)}`
+      : "",
     "",
     trendDelta ? `**Trend:** ${trendDelta}` : "",
     m.category ? `**Category:** ${m.category}` : "",
@@ -525,19 +554,42 @@ function MarketDetail({
         <List.Item.Detail.Metadata>
           <List.Item.Detail.Metadata.Label title="Odds" text={oddsText} />
           <List.Item.Detail.Metadata.Separator />
-          <List.Item.Detail.Metadata.Label title="Volume" text={formatCompact(vol)} />
+          <List.Item.Detail.Metadata.Label
+            title="Volume"
+            text={formatCompact(vol)}
+          />
           {m.liquidity != null && (
-            <List.Item.Detail.Metadata.Label title="Liquidity" text={formatCompact(m.liquidity)} />
+            <List.Item.Detail.Metadata.Label
+              title="Liquidity"
+              text={formatCompact(m.liquidity)}
+            />
           )}
           {m.openInterest != null && (
-            <List.Item.Detail.Metadata.Label title="Open Interest" text={formatCompact(m.openInterest)} />
+            <List.Item.Detail.Metadata.Label
+              title="Open Interest"
+              text={formatCompact(m.openInterest)}
+            />
           )}
           <List.Item.Detail.Metadata.Separator />
-          {trendDelta && <List.Item.Detail.Metadata.Label title="Trend" text={trendDelta} />}
-          {m.category && <List.Item.Detail.Metadata.Label title="Category" text={m.category} />}
-          <List.Item.Detail.Metadata.Label title="Closes" text={formatDate(m.closeTime)} />
+          {trendDelta && (
+            <List.Item.Detail.Metadata.Label title="Trend" text={trendDelta} />
+          )}
+          {m.category && (
+            <List.Item.Detail.Metadata.Label
+              title="Category"
+              text={m.category}
+            />
+          )}
+          <List.Item.Detail.Metadata.Label
+            title="Closes"
+            text={formatDate(m.closeTime)}
+          />
           <List.Item.Detail.Metadata.Separator />
-          <List.Item.Detail.Metadata.Link title="View on Kalshi" target={marketUrl(m)} text="Open" />
+          <List.Item.Detail.Metadata.Link
+            title="View on Kalshi"
+            target={marketUrl(m)}
+            text="Open"
+          />
         </List.Item.Detail.Metadata>
       }
     />
@@ -549,7 +601,9 @@ function MarketDetail({
 export default function SearchMarketsCommand() {
   const [searchText, setSearchText] = useState("");
   const [trendWindow, setTrendWindow] = useState<TrendWindow>("7D");
-  const [markets, setMarkets] = useState<MarketSummary[]>(() => loadCachedMarkets() ?? []);
+  const [markets, setMarkets] = useState<MarketSummary[]>(
+    () => loadCachedMarkets() ?? [],
+  );
   const [isLoading, setIsLoading] = useState(true);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -602,7 +656,10 @@ export default function SearchMarketsCommand() {
       throttle
       isShowingDetail={results.length > 0}
       searchBarAccessory={
-        <List.Dropdown tooltip="Trend Window" onChange={(v) => setTrendWindow(v as TrendWindow)}>
+        <List.Dropdown
+          tooltip="Trend Window"
+          onChange={(v) => setTrendWindow(v as TrendWindow)}
+        >
           <List.Dropdown.Item title="1 Day" value="1D" />
           <List.Dropdown.Item title="7 Days" value="7D" />
           <List.Dropdown.Item title="30 Days" value="30D" />
@@ -629,10 +686,14 @@ export default function SearchMarketsCommand() {
         results.map((r) => {
           const m = r.market;
           const oddsStr =
-            r.emphasizedOdds != null ? `${r.emphasizedOdds}% ${r.emphasizedOutcomeLabel}` : "";
+            r.emphasizedOdds != null
+              ? `${r.emphasizedOdds}% ${r.emphasizedOutcomeLabel}`
+              : "";
 
           const subtitle =
-            m.eventTitle && m.eventTitle !== m.title ? m.eventTitle : m.subtitle ?? "";
+            m.eventTitle && m.eventTitle !== m.title
+              ? m.eventTitle
+              : (m.subtitle ?? "");
 
           return (
             <List.Item
@@ -655,7 +716,10 @@ export default function SearchMarketsCommand() {
               detail={<MarketDetail result={r} trendWindow={trendWindow} />}
               actions={
                 <ActionPanel>
-                  <Action.OpenInBrowser title="Open on Kalshi" url={marketUrl(m)} />
+                  <Action.OpenInBrowser
+                    title="Open on Kalshi"
+                    url={marketUrl(m)}
+                  />
                   <Action.CopyToClipboard
                     title="Copy Market URL"
                     content={marketUrl(m)}
