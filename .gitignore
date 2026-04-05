@@ -1,6 +1,6 @@
 .build/
 .swiftpm/
 DerivedData/
-dist/TruthPulse.dmg
-dist/TruthPulse.zip
+dist/
 .DS_Store
+**/.DS_Store
