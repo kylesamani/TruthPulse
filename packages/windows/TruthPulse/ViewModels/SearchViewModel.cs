@@ -43,11 +43,14 @@ public partial class SearchViewModel : ObservableObject
     [ObservableProperty]
     private int _resultCount;
 
+    private readonly Dictionary<string, MarketTrend> _trendCache = new();
+
     public ObservableCollection<SearchResult> Results { get; } = new();
 
     public bool HasCachedMarkets => _searchService.HasCachedMarkets;
 
     public event Action? ResultsChanged;
+    public event Action? TrendCacheUpdated;
 
     public SearchViewModel()
         : this(new SearchService()) { }
@@ -71,6 +74,7 @@ public partial class SearchViewModel : ObservableObject
 
     partial void OnSelectedWindowChanged(TrendWindow value)
     {
+        _trendCache.Clear();
         if (SelectedResult != null)
             _ = LoadTrendIfNeededAsync(SelectedResult);
     }
@@ -160,11 +164,24 @@ public partial class SearchViewModel : ObservableObject
         }
     }
 
+    public MarketTrend? GetCachedTrend(SearchResult result)
+    {
+        var key = $"{result.Market.Ticker}::{SelectedWindow}";
+        return _trendCache.TryGetValue(key, out var trend) ? trend : null;
+    }
+
     private async Task LoadTrendIfNeededAsync(SearchResult result)
     {
         if (result.Market.SeriesTicker == null)
         {
             SelectedTrend = null;
+            return;
+        }
+
+        var key = $"{result.Market.Ticker}::{SelectedWindow}";
+        if (_trendCache.TryGetValue(key, out var cached))
+        {
+            SelectedTrend = cached;
             return;
         }
 
@@ -175,6 +192,12 @@ public partial class SearchViewModel : ObservableObject
                 result.Market.SeriesTicker,
                 SelectedWindow);
             SelectedTrend = trend;
+
+            if (trend != null)
+            {
+                _trendCache[key] = trend;
+                Application.Current?.Dispatcher.Invoke(() => TrendCacheUpdated?.Invoke());
+            }
         }
         catch
         {

@@ -108,6 +108,7 @@
                  MouseDoubleClick="ResultsListBox_MouseDoubleClick"
                  BorderThickness="0"
                  Background="Transparent"
+                 HorizontalContentAlignment="Stretch"
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
 
         <!-- Status bar -->

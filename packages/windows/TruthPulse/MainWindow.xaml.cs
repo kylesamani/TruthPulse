@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
 using TruthPulse.Models;
 using TruthPulse.ViewModels;
 
@@ -28,6 +30,7 @@ public partial class MainWindow : Window
         _viewModel = new SearchViewModel();
         _viewModel.PropertyChanged += ViewModel_PropertyChanged;
         _viewModel.ResultsChanged += OnResultsChanged;
+        _viewModel.TrendCacheUpdated += OnTrendCacheUpdated;
 
         Loaded += async (_, _) =>
         {
@@ -60,6 +63,11 @@ public partial class MainWindow : Window
     }
 
     private void OnResultsChanged()
+    {
+        Dispatcher.Invoke(RebuildResultsList);
+    }
+
+    private void OnTrendCacheUpdated()
     {
         Dispatcher.Invoke(RebuildResultsList);
     }
@@ -131,7 +139,8 @@ public partial class MainWindow : Window
 
         foreach (var result in _viewModel.Results)
         {
-            var panel = CreateResultPanel(result);
+            var trend = _viewModel.GetCachedTrend(result);
+            var panel = CreateResultPanel(result, trend);
             ResultsListBox.Items.Add(panel);
         }
 
@@ -155,7 +164,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private static Grid CreateResultPanel(SearchResult result)
+    private static Grid CreateResultPanel(SearchResult result, MarketTrend? trend)
     {
         var market = result.Market;
 
@@ -217,13 +226,20 @@ public partial class MainWindow : Window
         Grid.SetColumn(leftStack, 0);
         grid.Children.Add(leftStack);
 
-        // Right: odds badge
+        // Right: odds + sparkline stacked vertically
+        var rightStack = new StackPanel
+        {
+            VerticalAlignment = VerticalAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Right
+        };
+
+        // Odds badge
         if (result.EmphasizedOdds.HasValue)
         {
             var badgeContent = new StackPanel
             {
                 Orientation = Orientation.Horizontal,
-                VerticalAlignment = VerticalAlignment.Center
+                HorizontalAlignment = HorizontalAlignment.Right
             };
 
             var oddsText = new TextBlock
@@ -249,14 +265,79 @@ public partial class MainWindow : Window
                 Padding = new Thickness(8, 4, 8, 4),
                 CornerRadius = new CornerRadius(8),
                 Background = new SolidColorBrush(Color.FromRgb(16, 185, 129)),
-                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Right,
                 Child = badgeContent
             };
-
-            Grid.SetColumn(badge, 1);
-            grid.Children.Add(badge);
+            rightStack.Children.Add(badge);
         }
 
+        // Sparkline
+        var sparkline = CreateSparkline(trend, 80, 28);
+        sparkline.Margin = new Thickness(0, 6, 0, 0);
+        sparkline.HorizontalAlignment = HorizontalAlignment.Right;
+        rightStack.Children.Add(sparkline);
+
+        Grid.SetColumn(rightStack, 1);
+        grid.Children.Add(rightStack);
+
         return grid;
+    }
+
+    private static Border CreateSparkline(MarketTrend? trend, double width, double height)
+    {
+        var container = new Border
+        {
+            Width = width,
+            Height = height,
+            CornerRadius = new CornerRadius(6),
+            Background = new SolidColorBrush(Color.FromArgb(40, 16, 185, 129)),
+            ClipToBounds = true
+        };
+
+        if (trend == null || trend.Points.Count < 2)
+        {
+            var noTrendText = new TextBlock
+            {
+                Text = "No trend",
+                FontSize = 9,
+                Foreground = new SolidColorBrush(Color.FromRgb(170, 170, 170)),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            container.Child = noTrendText;
+            return container;
+        }
+
+        var canvas = new Canvas { Width = width, Height = height };
+
+        // Y axis: fixed 0-100%
+        var points = trend.Points;
+        var pointCollection = new PointCollection();
+        for (int i = 0; i < points.Count; i++)
+        {
+            var x = width * i / Math.Max(points.Count - 1, 1);
+            var normalizedY = points[i].Value / 100.0; // 0-100 scale
+            var y = height - (normalizedY * height);
+            pointCollection.Add(new Point(x, Math.Clamp(y, 0, height)));
+        }
+
+        var lineColor = (trend.Delta ?? 0) >= 0
+            ? Color.FromRgb(16, 185, 129)   // green
+            : Color.FromRgb(220, 50, 50);   // red
+
+        var polyline = new Polyline
+        {
+            Points = pointCollection,
+            Stroke = new SolidColorBrush(lineColor),
+            StrokeThickness = 2,
+            StrokeLineJoin = PenLineJoin.Round,
+            StrokeStartLineCap = PenLineCap.Round,
+            StrokeEndLineCap = PenLineCap.Round
+        };
+
+        canvas.Children.Add(polyline);
+        container.Child = canvas;
+
+        return container;
     }
 }
