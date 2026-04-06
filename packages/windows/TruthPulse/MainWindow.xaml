@@ -107,7 +107,8 @@
                  SelectionChanged="ResultsListBox_SelectionChanged"
                  MouseDoubleClick="ResultsListBox_MouseDoubleClick"
                  BorderThickness="0"
-                 Background="Transparent" />
+                 Background="Transparent"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
 
         <!-- Status bar -->
         <Grid Grid.Row="3" Margin="20,8,20,12">
