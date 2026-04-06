@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Interop;
+using System.Windows.Media.Imaging;
 using Hardcodet.Wpf.TaskbarNotification;
 
 namespace TruthPulse;
@@ -100,6 +101,7 @@ public partial class App : Application
     {
         _trayIcon = new TaskbarIcon
         {
+            IconSource = new BitmapImage(new Uri("pack://application:,,,/Assets/tray-icon.ico")),
             ToolTipText = "TruthPulse"
         };
 
