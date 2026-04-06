@@ -45,6 +45,11 @@ public partial class App : Application
     public App()
     {
         Instance = this;
+        DispatcherUnhandledException += (_, args) =>
+        {
+            MessageBox.Show($"Error: {args.Exception}", "TruthPulse Error");
+            args.Handled = true;
+        };
     }
 
     protected override void OnStartup(StartupEventArgs e)
@@ -55,16 +60,30 @@ public partial class App : Application
 
         _mainWindow = new MainWindow();
 
-        SetupTrayIcon();
+        try
+        {
+            SetupTrayIcon();
+        }
+        catch
+        {
+            // Tray icon is non-critical, continue without it
+        }
 
         _mainWindow.Show();
         _windowVisible = true;
 
-        // Register hotkey after window has a handle
-        var helper = new WindowInteropHelper(_mainWindow);
-        _hwndSource = HwndSource.FromHwnd(helper.Handle);
-        _hwndSource?.AddHook(WndProc);
-        RegisterHotKey(helper.Handle, HotkeyId, _hotkeyConfig.Modifiers, _hotkeyConfig.Key);
+        try
+        {
+            var helper = new WindowInteropHelper(_mainWindow);
+            var hwnd = helper.EnsureHandle();
+            _hwndSource = HwndSource.FromHwnd(hwnd);
+            _hwndSource?.AddHook(WndProc);
+            RegisterHotKey(hwnd, HotkeyId, _hotkeyConfig.Modifiers, _hotkeyConfig.Key);
+        }
+        catch
+        {
+            // Hotkey registration is non-critical
+        }
     }
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -138,8 +157,12 @@ public partial class App : Application
     {
         if (_mainWindow != null)
         {
-            var helper = new WindowInteropHelper(_mainWindow);
-            UnregisterHotKey(helper.Handle, HotkeyId);
+            try
+            {
+                var helper = new WindowInteropHelper(_mainWindow);
+                UnregisterHotKey(helper.Handle, HotkeyId);
+            }
+            catch { }
         }
         _trayIcon?.Dispose();
         base.OnExit(e);
