@@ -5,6 +5,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 using Hardcodet.Wpf.TaskbarNotification;
@@ -18,6 +19,7 @@ public partial class App : Application
     private MainWindow? _mainWindow;
     private TaskbarIcon? _trayIcon;
     private bool _windowVisible;
+    private bool _isQuitting;
 
     // --- Win32 P/Invoke for global hotkey ---
     [DllImport("user32.dll", SetLastError = true)]
@@ -70,6 +72,7 @@ public partial class App : Application
             // Tray icon is non-critical, continue without it
         }
 
+        _mainWindow.Closing += MainWindow_Closing;
         _mainWindow.Show();
         _windowVisible = true;
 
@@ -84,6 +87,16 @@ public partial class App : Application
         catch
         {
             // Hotkey registration is non-critical
+        }
+    }
+
+    private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        if (!_isQuitting)
+        {
+            e.Cancel = true;
+            _mainWindow?.Hide();
+            _windowVisible = false;
         }
     }
 
@@ -113,6 +126,10 @@ public partial class App : Application
         };
         contextMenu.Items.Add(hotkeyItem);
 
+        var changeHotkeyItem = new System.Windows.Controls.MenuItem { Header = "Change shortcut..." };
+        changeHotkeyItem.Click += (_, _) => ShowChangeHotkeyDialog();
+        contextMenu.Items.Add(changeHotkeyItem);
+
         contextMenu.Items.Add(new System.Windows.Controls.Separator());
 
         var feedbackItem = new System.Windows.Controls.MenuItem { Header = "Provide feedback / report bugs" };
@@ -127,7 +144,7 @@ public partial class App : Application
         contextMenu.Items.Add(new System.Windows.Controls.Separator());
 
         var quitItem = new System.Windows.Controls.MenuItem { Header = "Quit TruthPulse" };
-        quitItem.Click += (_, _) => Shutdown();
+        quitItem.Click += (_, _) => { _isQuitting = true; Shutdown(); };
         contextMenu.Items.Add(quitItem);
 
         _trayIcon.ContextMenu = contextMenu;
@@ -177,6 +194,149 @@ public partial class App : Application
         if ((_hotkeyConfig.Modifiers & MOD_SHIFT) != 0) parts.Add("Shift");
         parts.Add(((char)_hotkeyConfig.Key).ToString());
         return string.Join("+", parts);
+    }
+
+    private void ShowChangeHotkeyDialog()
+    {
+        var dialog = new Window
+        {
+            Title = "Set Global Shortcut",
+            Width = 340,
+            Height = 160,
+            WindowStartupLocation = WindowStartupLocation.CenterScreen,
+            ResizeMode = ResizeMode.NoResize
+        };
+
+        var stack = new System.Windows.Controls.StackPanel { Margin = new Thickness(20) };
+
+        var label = new System.Windows.Controls.TextBlock
+        {
+            Text = "Press your desired shortcut key combination:",
+            Margin = new Thickness(0, 0, 0, 12)
+        };
+        stack.Children.Add(label);
+
+        var display = new System.Windows.Controls.TextBox
+        {
+            IsReadOnly = true,
+            FontSize = 16,
+            FontWeight = FontWeights.SemiBold,
+            TextAlignment = TextAlignment.Center,
+            Padding = new Thickness(8),
+            Text = FormatHotkey()
+        };
+        stack.Children.Add(display);
+
+        uint capturedMods = 0;
+        uint capturedKey = 0;
+
+        display.PreviewKeyDown += (_, ke) =>
+        {
+            ke.Handled = true;
+            var key = ke.Key == Key.System ? ke.SystemKey : ke.Key;
+
+            // Ignore modifier-only presses
+            if (key == Key.LeftCtrl || key == Key.RightCtrl ||
+                key == Key.LeftShift || key == Key.RightShift ||
+                key == Key.LeftAlt || key == Key.RightAlt ||
+                key == Key.LWin || key == Key.RWin)
+                return;
+
+            uint mods = 0;
+            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control)) mods |= MOD_CONTROL;
+            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift)) mods |= MOD_SHIFT;
+            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Alt)) mods |= 0x0001; // MOD_ALT
+
+            if (mods == 0) return; // require at least one modifier
+
+            capturedMods = mods;
+            capturedKey = (uint)KeyInterop.VirtualKeyFromKey(key);
+
+            var parts = new List<string>();
+            if ((mods & MOD_CONTROL) != 0) parts.Add("Ctrl");
+            if ((mods & 0x0001) != 0) parts.Add("Alt");
+            if ((mods & MOD_SHIFT) != 0) parts.Add("Shift");
+            parts.Add(key.ToString());
+            display.Text = string.Join("+", parts);
+        };
+
+        var btnPanel = new System.Windows.Controls.StackPanel
+        {
+            Orientation = System.Windows.Controls.Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            Margin = new Thickness(0, 12, 0, 0)
+        };
+
+        var saveBtn = new System.Windows.Controls.Button
+        {
+            Content = "Save",
+            Padding = new Thickness(16, 4, 16, 4),
+            Margin = new Thickness(0, 0, 8, 0)
+        };
+        saveBtn.Click += (_, _) =>
+        {
+            if (capturedKey == 0) { dialog.Close(); return; }
+
+            // Unregister old hotkey
+            if (_mainWindow != null)
+            {
+                try
+                {
+                    var helper = new WindowInteropHelper(_mainWindow);
+                    UnregisterHotKey(helper.Handle, HotkeyId);
+                }
+                catch { }
+            }
+
+            _hotkeyConfig = new HotkeyConfig { Modifiers = capturedMods, Key = capturedKey };
+            SaveHotkeyConfig();
+
+            // Register new hotkey
+            if (_mainWindow != null)
+            {
+                try
+                {
+                    var helper = new WindowInteropHelper(_mainWindow);
+                    RegisterHotKey(helper.Handle, HotkeyId, _hotkeyConfig.Modifiers, _hotkeyConfig.Key);
+                }
+                catch { }
+            }
+
+            // Update tray menu label
+            if (_trayIcon?.ContextMenu?.Items[0] is System.Windows.Controls.MenuItem mi)
+                mi.Header = $"Shortcut: {FormatHotkey()}";
+
+            dialog.Close();
+        };
+        btnPanel.Children.Add(saveBtn);
+
+        var cancelBtn = new System.Windows.Controls.Button
+        {
+            Content = "Cancel",
+            Padding = new Thickness(16, 4, 16, 4)
+        };
+        cancelBtn.Click += (_, _) => dialog.Close();
+        btnPanel.Children.Add(cancelBtn);
+
+        stack.Children.Add(btnPanel);
+        dialog.Content = stack;
+        display.Focus();
+        dialog.ShowDialog();
+    }
+
+    private void SaveHotkeyConfig()
+    {
+        var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var dir = Path.Combine(appData, "TruthPulse");
+        Directory.CreateDirectory(dir);
+        var settingsPath = Path.Combine(dir, "settings.json");
+
+        try
+        {
+            var json = JsonSerializer.Serialize(_hotkeyConfig, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(settingsPath, json);
+        }
+        catch { }
     }
 
     private void LoadHotkeyConfig()
