@@ -148,7 +148,10 @@ public partial class MainWindow : Window
         {
             var idx = _viewModel.Results.IndexOf(_viewModel.SelectedResult);
             if (idx >= 0 && idx < ResultsListBox.Items.Count)
+            {
                 ResultsListBox.SelectedIndex = idx;
+                ResultsListBox.ScrollIntoView(ResultsListBox.Items[idx]);
+            }
         }
     }
 

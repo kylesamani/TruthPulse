@@ -91,7 +91,7 @@
                      FontSize="15"
                      Padding="12,10"
                      TextChanged="SearchBox_TextChanged"
-                     KeyDown="SearchBox_KeyDown" />
+                     PreviewKeyDown="SearchBox_KeyDown" />
             <TextBlock x:Name="SearchPlaceholder"
                        Text="Search all Kalshi markets."
                        FontSize="15"
