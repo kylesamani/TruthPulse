@@ -39,13 +39,16 @@
                            Margin="0,2,0,0" />
             </StackPanel>
 
-            <ComboBox x:Name="WindowComboBox" Grid.Column="1"
-                      SelectedIndex="1" Width="80"
-                      SelectionChanged="WindowComboBox_SelectionChanged">
-                <ComboBoxItem Content="1D" />
-                <ComboBoxItem Content="7D" />
-                <ComboBoxItem Content="30D" />
-            </ComboBox>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <RadioButton x:Name="Window1D" Content="1D" GroupName="TrendWindow"
+                             Click="WindowRadio_Click" Style="{StaticResource SegmentButton}"
+                             Margin="0,0,2,0" />
+                <RadioButton x:Name="Window7D" Content="7D" GroupName="TrendWindow"
+                             Click="WindowRadio_Click" Style="{StaticResource SegmentButton}"
+                             IsChecked="True" Margin="0,0,2,0" />
+                <RadioButton x:Name="Window30D" Content="30D" GroupName="TrendWindow"
+                             Click="WindowRadio_Click" Style="{StaticResource SegmentButton}" />
+            </StackPanel>
         </Grid>
 
         <!-- Search input -->

@@ -90,16 +90,19 @@ public partial class MainWindow : Window
         }
     }
 
-    private void WindowComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void WindowRadio_Click(object sender, RoutedEventArgs e)
     {
         if (_viewModel == null) return;
-        _viewModel.SelectedWindow = WindowComboBox.SelectedIndex switch
+        if (sender is System.Windows.Controls.RadioButton rb)
         {
-            0 => TrendWindow.OneDay,
-            1 => TrendWindow.SevenDays,
-            2 => TrendWindow.ThirtyDays,
-            _ => TrendWindow.SevenDays
-        };
+            _viewModel.SelectedWindow = rb.Name switch
+            {
+                "Window1D" => TrendWindow.OneDay,
+                "Window7D" => TrendWindow.SevenDays,
+                "Window30D" => TrendWindow.ThirtyDays,
+                _ => TrendWindow.SevenDays
+            };
+        }
     }
 
     private void ResultsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
