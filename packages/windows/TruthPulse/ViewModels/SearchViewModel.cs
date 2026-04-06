@@ -144,7 +144,15 @@ public partial class SearchViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Refresh failed: {ex.Message}";
+            // If we have cached markets, show a warning but don't block usage
+            if (_searchService.HasLoadedMarkets)
+            {
+                ErrorMessage = $"Partial sync — using cached data";
+            }
+            else
+            {
+                ErrorMessage = $"Refresh failed: {ex.Message}";
+            }
         }
         finally
         {
