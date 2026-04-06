@@ -11,6 +11,7 @@ final class TruthPulseAppDelegate: NSObject, NSApplicationDelegate, NSPopoverDel
     private var cancellables = Set<AnyCancellable>()
     private let hotkeyManager = HotkeyManager()
     private var recorderController: HotkeyRecorderWindowController?
+    private let updater = AutoUpdater()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         do {
@@ -21,6 +22,7 @@ final class TruthPulseAppDelegate: NSObject, NSApplicationDelegate, NSPopoverDel
             configureStatusItem()
             registerHotkey()
             observeState(state)
+            Task { await updater.checkSilently() }
         } catch {
             fatalError("Failed to initialize TruthPulse: \(error)")
         }
@@ -51,8 +53,11 @@ final class TruthPulseAppDelegate: NSObject, NSApplicationDelegate, NSPopoverDel
         let feedbackItem = NSMenuItem(title: "Provide feedback/report bugs", action: #selector(openFeedback), keyEquivalent: "")
         feedbackItem.target = self
 
+        let updateItem = NSMenuItem(title: "Check for Updates", action: #selector(checkForUpdatesAction), keyEquivalent: "")
+        updateItem.target = self
+
         statusMenu.autoenablesItems = false
-        statusMenu.items = [hotkeyItem, feedbackItem, .separator(), quitItem]
+        statusMenu.items = [hotkeyItem, feedbackItem, updateItem, .separator(), quitItem]
     }
 
     private func configurePopover(with state: AppState) {
@@ -140,13 +145,19 @@ final class TruthPulseAppDelegate: NSObject, NSApplicationDelegate, NSPopoverDel
 
     @objc
     private func openFeedback() {
-        if let url = URL(string: "https://mail.google.com/mail/?view=cm&to=iam@kylesamani.com&su=TruthPulse%20Feedback") {
+        if let url = URL(string: "https://mail.google.com/mail/?view=cm&to=truthpulse@kylesamani.com&su=TruthPulse%20Feedback") {
             NSWorkspace.shared.open(url)
         }
     }
 
     @objc
+    private func checkForUpdatesAction() {
+        Task { await updater.checkManually() }
+    }
+
+    @objc
     private func quitApp(_ sender: Any?) {
+        updater.installPendingUpdateIfNeeded()
         NSApp.terminate(nil)
     }
 
