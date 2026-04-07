@@ -46,26 +46,38 @@ final class IOSAppState: ObservableObject {
     @Published private(set) var hasCachedMarkets = false
     @Published private(set) var errorMessage: String?
     @Published private(set) var lastSyncDate: Date?
+    @Published private(set) var isReady = false
     @Published var syncInterval: IOSSyncInterval = IOSSyncInterval.load() {
         didSet { IOSSyncInterval.save(syncInterval) }
     }
 
-    private let service: SearchService
+    private var service: SearchService?
     private let spotlightIndexer = SpotlightIndexer()
     private var searchTask: Task<Void, Never>?
     private var queryGeneration: UInt64 = 0
 
     init() {
-        do {
-            self.service = try SearchService()
-            self.hasCachedMarkets = service.hasCacheOnDisk
-        } catch {
-            fatalError("Failed to initialize SearchService: \(error)")
-        }
+        // Empty init — no file I/O, no blocking work
     }
 
     func onAppear() {
+        guard !isReady else { return }
+
         Task {
+            // Create SearchService off the first frame
+            do {
+                let svc = try SearchService()
+                self.service = svc
+                self.hasCachedMarkets = svc.hasCacheOnDisk
+                self.isReady = true
+            } catch {
+                self.isReady = true
+                self.errorMessage = "Failed to initialize: \(error.localizedDescription)"
+                return
+            }
+
+            guard let service else { return }
+
             try? await service.bootstrapIfNeeded()
             let cached = await service.hasLoadedMarkets()
             hasCachedMarkets = cached
@@ -91,6 +103,7 @@ final class IOSAppState: ObservableObject {
     }
 
     func refreshMarkets() async {
+        guard let service else { return }
         isRefreshing = true
         defer { isRefreshing = false }
 
@@ -139,7 +152,7 @@ final class IOSAppState: ObservableObject {
     }
 
     func loadTrendIfNeeded(for market: MarketSummary) {
-        guard let seriesTicker = market.seriesTicker else { return }
+        guard let service, let seriesTicker = market.seriesTicker else { return }
         let key = "\(market.ticker)::\(selectedWindow.rawValue)"
         if trends[key] != nil { return }
 
@@ -147,9 +160,7 @@ final class IOSAppState: ObservableObject {
             do {
                 let trend = try await service.trend(for: market.ticker, seriesTicker: seriesTicker, window: selectedWindow)
                 trends[key] = trend
-            } catch {
-                // Sparkline fetch failure is non-critical
-            }
+            } catch {}
         }
     }
 
@@ -163,6 +174,7 @@ final class IOSAppState: ObservableObject {
     }
 
     private func executeSearch(generation: UInt64) async {
+        guard let service else { return }
         let results = await service.search(query: query)
         guard generation == queryGeneration else { return }
         self.results = results
@@ -171,6 +183,7 @@ final class IOSAppState: ObservableObject {
     }
 
     private func prefetchVisibleTrends() async {
+        guard let service else { return }
         let top = Array(results.prefix(6))
         await withTaskGroup(of: Void.self) { group in
             for result in top {
@@ -181,10 +194,8 @@ final class IOSAppState: ObservableObject {
                     let key = "\(ticker)::\(await self?.selectedWindow.rawValue ?? "")"
                     if await self?.trends[key] != nil { return }
                     do {
-                        let trend = try await self?.service.trend(for: ticker, seriesTicker: seriesTicker, window: self?.selectedWindow ?? .sevenDays)
-                        if let trend {
-                            await MainActor.run { self?.trends[key] = trend }
-                        }
+                        let trend = try await service.trend(for: ticker, seriesTicker: seriesTicker, window: self?.selectedWindow ?? .sevenDays)
+                        await MainActor.run { self?.trends[key] = trend }
                     } catch {}
                 }
             }
