@@ -3,8 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net9.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
-    <Platforms>x64;ARM64</Platforms>
-    <PlatformTarget>$(Platform)</PlatformTarget>
+    <Platforms>x64;ARM64;AnyCPU</Platforms>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <RootNamespace>Community.PowerToys.Run.Plugin.TruthPulse</RootNamespace>
     <AssemblyName>Community.PowerToys.Run.Plugin.TruthPulse</AssemblyName>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
