@@ -15,7 +15,6 @@ targets:
     platform: iOS
     sources:
       - path: ../mac/Sources/TruthPulseIOS
-    resources:
       - path: Assets.xcassets
     dependencies:
       - package: TruthPulsePackage
