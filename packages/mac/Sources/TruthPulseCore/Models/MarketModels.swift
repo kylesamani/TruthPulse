@@ -102,17 +102,17 @@ public struct MarketSummary: Identifiable, Hashable, Codable, Sendable {
         self.webURL = webURL
     }
 
+    /// URL to the event overview page (chart, description, all contracts).
     public var resolvedWebURL: URL {
-        if let webURL {
-            return webURL
-        }
-
-        if let seriesTicker, let eventTicker {
+        if let seriesTicker {
             let series = seriesTicker.lowercased()
-            let event = eventTicker.lowercased()
-            if let url = URL(string: "https://kalshi.com/markets/\(series)/m/\(event)") {
+            if let url = URL(string: "https://kalshi.com/markets/\(series)") {
                 return url
             }
+        }
+
+        if let webURL {
+            return webURL
         }
 
         let searchTerm = title.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ticker
