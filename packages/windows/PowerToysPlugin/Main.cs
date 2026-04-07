@@ -37,6 +37,7 @@ public class Main : IPlugin
     public List<Result> Query(Query query)
     {
         var search = query.Search?.Trim();
+        var rawQuery = query.RawQuery;
         if (string.IsNullOrEmpty(search) || search.Length < 3)
         {
             return new List<Result>
@@ -47,6 +48,7 @@ public class Main : IPlugin
                     SubTitle = "Type at least 3 characters to search",
                     IcoPath = _iconPath,
                     Score = 0,
+                    QueryTextDisplay = rawQuery,
                 }
             };
         }
@@ -82,6 +84,7 @@ public class Main : IPlugin
                         SubTitle = "Start the TruthPulse app to search prediction markets",
                         IcoPath = _iconPath,
                         Score = 0,
+                        QueryTextDisplay = rawQuery,
                     }
                 };
             }
@@ -101,6 +104,7 @@ public class Main : IPlugin
                         SubTitle = $"No Kalshi markets matching \"{search}\"",
                         IcoPath = _iconPath,
                         Score = 0,
+                        QueryTextDisplay = rawQuery,
                     }
                 };
             }
@@ -116,6 +120,7 @@ public class Main : IPlugin
                     SubTitle = item.Description,
                     IcoPath = _iconPath,
                     Score = 100 - i,
+                    QueryTextDisplay = rawQuery,
                     Action = _ =>
                     {
                         try
@@ -140,6 +145,7 @@ public class Main : IPlugin
                     SubTitle = ex.Message,
                     IcoPath = _iconPath,
                     Score = 0,
+                    QueryTextDisplay = rawQuery,
                 }
             };
         }
