@@ -4,13 +4,14 @@ Instant search across all open Kalshi prediction markets. Live odds, trend data,
 
 ## Download
 
-| Platform | Link |
-|----------|------|
-| **macOS** | [Download TruthPulse.dmg](https://github.com/kylesamani/TruthPulse/releases/latest/download/TruthPulse.dmg) |
-| **iOS** | Build from source (see below) |
-| **Windows** | Build from source (see below) |
-| **Android** | Build from source (see below) |
-| **Raycast** | [TruthPulse on Raycast Store](https://www.raycast.com/kyle_samani/truthpulse) |
+| Platform | Download |
+|----------|----------|
+| **macOS** | [TruthPulse.dmg](https://github.com/kylesamani/TruthPulse/releases/latest/download/TruthPulse.dmg) |
+| **iOS** | App Store (coming soon) |
+| **Windows** | [TruthPulse-windows.zip](https://github.com/kylesamani/TruthPulse/releases/latest/download/TruthPulse-windows.zip) |
+| ↳ PowerToys Run | [TruthPulse-powertoys.zip](https://github.com/kylesamani/TruthPulse/releases/latest/download/TruthPulse-powertoys.zip) |
+| **Android** | [TruthPulse-android.apk](https://github.com/kylesamani/TruthPulse/releases/latest/download/TruthPulse-android.apk) |
+| **Raycast** | [Raycast Store](https://www.raycast.com/kyle_samani/truthpulse) |
 
 ## Features
 
