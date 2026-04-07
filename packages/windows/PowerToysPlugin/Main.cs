@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Text.Json;
+using System.Threading.Tasks;
 using Wox.Plugin;
 
 namespace Community.PowerToys.Run.Plugin.TruthPulse;
