@@ -16,8 +16,7 @@ public class Main : IPlugin
 
     public string Description => "Search Kalshi prediction markets with live odds";
 
-    private PluginInitContext? _context;
-    private string? _iconPath;
+    private string _iconPath = "Images/dark.png";
     private readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(5) };
 
     private const int BasePort = 47392;
@@ -25,8 +24,14 @@ public class Main : IPlugin
 
     public void Init(PluginInitContext context)
     {
-        _context = context;
-        _iconPath = context.CurrentPluginMetadata.IcoPathDark;
+        try
+        {
+            _iconPath = context.CurrentPluginMetadata.IcoPathDark ?? "Images/dark.png";
+        }
+        catch
+        {
+            _iconPath = "Images/dark.png";
+        }
     }
 
     public List<Result> Query(Query query)
