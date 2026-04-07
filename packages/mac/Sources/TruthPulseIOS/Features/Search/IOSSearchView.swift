@@ -6,6 +6,7 @@ import TruthPulseCore
 
 struct IOSSearchView: View {
     @ObservedObject var state: IOSAppState
+    @State private var showSettings = false
 
     var body: some View {
         NavigationStack {
@@ -48,30 +49,15 @@ struct IOSSearchView: View {
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Menu {
-                        Picker("Trend", selection: $state.selectedWindow) {
-                            ForEach(TrendWindow.allCases) { window in
-                                Text(window.title).tag(window)
-                            }
-                        }
-
-                        Divider()
-
-                        Menu("Sync Interval") {
-                            Picker("Sync", selection: $state.syncInterval) {
-                                ForEach(IOSSyncInterval.allCases, id: \.self) { interval in
-                                    Text(interval.label).tag(interval)
-                                }
-                            }
-                        }
-
-                        if let lastSync = state.lastSyncDate {
-                            Text("Last synced \(lastSync, style: .relative) ago")
-                        }
+                    Button {
+                        showSettings = true
                     } label: {
-                        Image(systemName: "ellipsis.circle")
+                        Image(systemName: "gearshape")
                     }
                 }
+            }
+            .sheet(isPresented: $showSettings) {
+                IOSSettingsView(state: state)
             }
         }
         .onAppear { state.onAppear() }

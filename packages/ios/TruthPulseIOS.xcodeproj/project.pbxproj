@@ -11,6 +11,7 @@
 		4A2C8758430D479F1FF613C4 /* IOSSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55BF973F2EF93A442BBAF5C3 /* IOSSearchView.swift */; };
 		59FDEC3F92D96BC150325839 /* IOSResultRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF8E13B243D7F52745BDBBCE /* IOSResultRowView.swift */; };
 		8EFCCB0062D18AEFA4F696BA /* TruthPulseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 7ED8AB1FBD7E728744DECC7E /* TruthPulseCore */; };
+		950F708D2CAA002B73922FB8 /* IOSSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9F20E57FEA3850431B997C7 /* IOSSettingsView.swift */; };
 		CB619332EB0E59F09EE76FC0 /* IOSSparklineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD449C4F39A022FF6A820E42 /* IOSSparklineView.swift */; };
 		EDBA6B86539119EAE1014F6E /* TruthPulseIOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F59907AFABAF435738EE660 /* TruthPulseIOSApp.swift */; };
 /* End PBXBuildFile section */
@@ -21,6 +22,7 @@
 		55BF973F2EF93A442BBAF5C3 /* IOSSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOSSearchView.swift; sourceTree = "<group>"; };
 		7DB0A90108C51DE841300382 /* TruthPulseIOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TruthPulseIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A068DE571817BA7F20F2A256 /* IOSAppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOSAppState.swift; sourceTree = "<group>"; };
+		B9F20E57FEA3850431B997C7 /* IOSSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOSSettingsView.swift; sourceTree = "<group>"; };
 		DF8E13B243D7F52745BDBBCE /* IOSResultRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOSResultRowView.swift; sourceTree = "<group>"; };
 		FD449C4F39A022FF6A820E42 /* IOSSparklineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOSSparklineView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -78,6 +80,7 @@
 			children = (
 				DF8E13B243D7F52745BDBBCE /* IOSResultRowView.swift */,
 				55BF973F2EF93A442BBAF5C3 /* IOSSearchView.swift */,
+				B9F20E57FEA3850431B997C7 /* IOSSettingsView.swift */,
 				FD449C4F39A022FF6A820E42 /* IOSSparklineView.swift */,
 			);
 			path = Search;
@@ -165,6 +168,7 @@
 				22FB81BB382804E8F4CDFBE1 /* IOSAppState.swift in Sources */,
 				59FDEC3F92D96BC150325839 /* IOSResultRowView.swift in Sources */,
 				4A2C8758430D479F1FF613C4 /* IOSSearchView.swift in Sources */,
+				950F708D2CAA002B73922FB8 /* IOSSettingsView.swift in Sources */,
 				CB619332EB0E59F09EE76FC0 /* IOSSparklineView.swift in Sources */,
 				EDBA6B86539119EAE1014F6E /* TruthPulseIOSApp.swift in Sources */,
 			);
