@@ -7,38 +7,31 @@ Instant search across all open Kalshi prediction markets. Live odds, trend data,
 | Platform | Link |
 |----------|------|
 | **macOS** | [Download TruthPulse.dmg](https://github.com/kylesamani/TruthPulse/releases/latest/download/TruthPulse.dmg) |
-| **Windows** | [Build from source](packages/windows) (see instructions below) |
+| **iOS** | Build from source (see below) |
+| **Windows** | Build from source (see below) |
+| **Android** | Build from source (see below) |
 | **Raycast** | [TruthPulse on Raycast Store](https://www.raycast.com/kyle_samani/truthpulse) |
 
 ## Features
 
-- Search 10,000+ open prediction markets by title, category, or outcome
+- Search 40,000+ open prediction markets by title, category, or outcome
 - Live odds displayed inline for every result
-- Trend data (1D / 7D / 30D) with price delta
+- Trend data (1D / 7D / 30D) with sparkline charts and price delta
+- Synonym expansion ("fed" matches "federal reserve", "btc" matches "bitcoin")
 - Local cache for instant results, background sync with Kalshi API
-- Open any market on kalshi.com with one keystroke
-- Configurable global hotkey (default: Cmd+Shift+K on macOS, Ctrl+Shift+K on Windows)
-- Configurable sync interval (1 min to 24 hours)
-- macOS Spotlight integration (search markets from Spotlight)
-- Windows PowerToys Run integration (search markets from PowerToys Run)
+- Open any market on kalshi.com with one keystroke/tap
+- OS-native search integration on every platform:
+  - **macOS**: Spotlight (search markets from Spotlight)
+  - **iOS**: Spotlight (search markets from Spotlight)
+  - **Windows**: PowerToys Run (search markets from Alt+Space)
+  - **Android**: AppSearch (search markets from OEM launcher search)
+- Configurable global hotkey (macOS: Cmd+Shift+K, Windows: Ctrl+Shift+K)
 
-## Screenshots
+## Platforms
 
-*Coming soon*
+### macOS (menu bar app)
 
-## Source Code
-
-Each platform is a self-contained implementation under `packages/`:
-
-| Package | Stack |
-|---------|-------|
-| [`packages/mac`](packages/mac) | Swift 6 / SwiftUI / AppKit — macOS menu bar app + Spotlight |
-| [`packages/windows`](packages/windows) | C# / WPF / .NET 8 — Windows system tray app + PowerToys Run plugin |
-| [`packages/raycast`](packages/raycast) | TypeScript / React — Raycast extension |
-
-## Build from source
-
-### macOS
+Sits in your menu bar. Click the icon or press the global hotkey to search.
 
 ```bash
 cd packages/mac
@@ -46,9 +39,22 @@ swift build
 swift run TruthPulse
 ```
 
-### Windows
+Requires macOS 14+ (Sonoma). No external dependencies.
 
-**Prerequisites:** [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+### iOS
+
+Native iPhone and iPad app with Spotlight integration. Tap any result to open the market on kalshi.com in an in-app browser.
+
+```bash
+cd packages/mac
+swift build
+```
+
+The iOS target is part of the shared Swift package. Open in Xcode to build and run on a device or simulator. Requires iOS 17+.
+
+### Windows (system tray app)
+
+Runs in the system tray. Right-click the tray icon to configure hotkey, sync interval, or quit.
 
 ```powershell
 cd packages\windows
@@ -56,43 +62,30 @@ dotnet build
 dotnet run --project TruthPulse
 ```
 
-The app runs in the system tray. Use the global hotkey (default: Ctrl+Shift+K) to toggle the search window. Right-click the tray icon to change the hotkey, sync interval, check for updates, or quit.
+Requires [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
 
-### PowerToys Run Plugin
+#### PowerToys Run Plugin
 
-The PowerToys Run plugin lets you search Kalshi markets directly from the PowerToys Run launcher (Alt+Space by default).
-
-**Prerequisites:**
-- [PowerToys](https://github.com/microsoft/PowerToys/releases) v0.70+
-- TruthPulse Windows app running (the plugin queries the app's local search API)
-
-**Install:**
+Search Kalshi markets from the PowerToys Run launcher (Alt+Space).
 
 ```powershell
 cd packages\windows
 powershell -ExecutionPolicy Bypass -File install-powertoys-plugin.ps1
 ```
 
-Or manually:
+Requires [PowerToys](https://github.com/microsoft/PowerToys/releases) v0.70+ and the TruthPulse Windows app running. Type `tp ` followed by your query.
 
-```powershell
-cd packages\windows
-dotnet build PowerToysPlugin -c Release
-Stop-Process -Name PowerToys -Force -ErrorAction SilentlyContinue
-$dest = "$env:LOCALAPPDATA\Microsoft\PowerToys\PowerToys Run\Plugins\TruthPulse"
-New-Item -ItemType Directory -Path $dest -Force
-Copy-Item "PowerToysPlugin\bin\Release\*" $dest -Recurse -Force
+### Android
+
+Native Android app with Material 3 design. Integrates with Android AppSearch for OEM launcher search (Samsung, OnePlus, etc.) and legacy Global Search for older devices.
+
+```bash
+cd packages/android
+./gradlew assembleDebug
+./gradlew installDebug   # install on connected device/emulator
 ```
 
-After installing, restart PowerToys and type `tp ` followed by your query:
-
-```
-tp tesla
-tp fed rates
-tp bitcoin
-```
-
-Press Enter on any result to open it on kalshi.com.
+Requires Android SDK 35 and JDK 17+. Target: Android 8+ (API 26).
 
 ### Raycast
 
@@ -102,20 +95,47 @@ npm install
 npm run dev
 ```
 
+Also available on the [Raycast Store](https://www.raycast.com/kyle_samani/truthpulse).
+
 ## Architecture
 
 ```
 packages/
-├── mac/                    # macOS menu bar app (Swift/SwiftUI)
+├── shared/                 # Shared synonym table (synonyms.json)
+├── mac/                    # macOS + iOS (Swift/SwiftUI, shared package)
+│   └── Sources/
+│       ├── TruthPulseCore/ # Shared business logic (models, services, ranking)
+│       ├── TruthPulse/     # macOS menu bar app
+│       └── TruthPulseIOS/  # iOS app
 ├── windows/
 │   ├── TruthPulse/         # Windows system tray app (C#/WPF/.NET 8)
-│   ├── PowerToysPlugin/    # PowerToys Run plugin (queries TruthPulse app)
-│   └── TruthPulse.sln      # Visual Studio solution (both projects)
+│   └── PowerToysPlugin/    # PowerToys Run plugin
 ├── android/                # Android app (Kotlin/Jetpack Compose)
 └── raycast/                # Raycast extension (TypeScript/React)
 ```
 
 All platforms fetch directly from the [Kalshi public API](https://trading-api.readme.io/reference/getmarkets). No backend server required. Markets are cached locally for instant search, with configurable background refresh.
+
+### How search works
+
+1. On launch, fetch all open markets from Kalshi (cursor-paginated, ~40K markets)
+2. Build a local search index with normalized text (diacritics stripped, lowercased)
+3. On keystroke (4-char minimum, 80ms debounce): two-pass filter (phrase match, then all-tokens-present)
+4. Rank results using field-weighted text scoring + market signals (liquidity, volume, open interest, recency)
+5. Expand queries with synonym table ("fed" also searches "federal reserve", "fomc")
+6. Trend data (candlestick charts) loaded lazily on result selection
+
+### OS search integration
+
+Each platform indexes markets into the OS search infrastructure so users can find prediction market odds without opening the app:
+
+| Platform | API | What happens |
+|----------|-----|-------------|
+| macOS | Core Spotlight | Markets appear in Spotlight results with odds |
+| iOS | Core Spotlight | Markets appear in Spotlight results with odds |
+| Windows | PowerToys Run plugin | Type `tp query` in PowerToys Run |
+| Android | AppSearch PlatformStorage | Markets appear in OEM launcher search |
+| Android | ContentProvider (legacy) | Fallback for older launchers |
 
 ## License
 

@@ -5,3 +5,10 @@ dist/
 .DS_Store
 **/.DS_Store
 TruthPulse.app/
+
+# Android
+packages/android/.gradle/
+packages/android/app/build/
+packages/android/build/
+*.apk
+local.properties
