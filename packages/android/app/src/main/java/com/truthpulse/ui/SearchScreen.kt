@@ -116,7 +116,21 @@ fun SearchScreen(
 
             // Status / content area
             when {
-                uiState.isSyncing -> {
+                uiState.results.isNotEmpty() -> {
+                    ResultsList(
+                        results = uiState.results,
+                        trends = uiState.trends,
+                        onResultClick = { result ->
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(result.market.resolvedWebUrl))
+                            context.startActivity(intent)
+                        },
+                        onResultVisible = { result ->
+                            viewModel.loadTrend(result)
+                        },
+                    )
+                }
+
+                uiState.isSyncing && uiState.marketCount == 0 -> {
                     SyncingIndicator(
                         marketCount = uiState.marketCount,
                         modifier = Modifier
@@ -135,16 +149,7 @@ fun SearchScreen(
                     )
                 }
 
-                uiState.query.length < 4 -> {
-                    EmptyState(
-                        marketCount = uiState.marketCount,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 32.dp),
-                    )
-                }
-
-                uiState.results.isEmpty() -> {
+                uiState.query.length >= 4 && uiState.results.isEmpty() -> {
                     Text(
                         text = stringResource(R.string.no_results),
                         style = MaterialTheme.typography.bodyLarge,
@@ -157,16 +162,11 @@ fun SearchScreen(
                 }
 
                 else -> {
-                    ResultsList(
-                        results = uiState.results,
-                        trends = uiState.trends,
-                        onResultClick = { result ->
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(result.market.resolvedWebUrl))
-                            context.startActivity(intent)
-                        },
-                        onResultVisible = { result ->
-                            viewModel.loadTrend(result)
-                        },
+                    EmptyState(
+                        marketCount = uiState.marketCount,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 32.dp),
                     )
                 }
             }

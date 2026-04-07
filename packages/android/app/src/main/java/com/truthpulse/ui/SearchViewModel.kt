@@ -7,6 +7,8 @@ import com.truthpulse.TruthPulseApp
 import com.truthpulse.data.MarketTrend
 import com.truthpulse.data.SearchResult
 import com.truthpulse.data.TrendWindow
+import android.util.Log
+import com.truthpulse.search.SearchIndexer
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,6 +28,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
 
     private val app = application as TruthPulseApp
     private val searchService = app.searchService
+    private val searchIndexer = SearchIndexer(application)
 
     private val _uiState = MutableStateFlow(SearchUiState())
     val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
@@ -39,11 +42,13 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
 
     private fun loadMarkets() {
         viewModelScope.launch {
+            Log.d("TruthPulse", "loadMarkets: starting")
             _uiState.update { it.copy(isSyncing = true, error = null) }
 
             try {
                 // Try loading from cache first
                 val hasCached = searchService.hasLoadedMarkets()
+                Log.d("TruthPulse", "loadMarkets: hasCached=$hasCached")
                 if (hasCached) {
                     _uiState.update {
                         it.copy(
@@ -54,7 +59,9 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
                 }
 
                 // Then refresh from network
+                Log.d("TruthPulse", "loadMarkets: refreshing from network")
                 searchService.refreshOpenMarkets(force = true)
+                Log.d("TruthPulse", "loadMarkets: done, marketCount=${searchService.marketCount}")
                 _uiState.update {
                     it.copy(
                         isSyncing = false,
@@ -63,12 +70,18 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
                     )
                 }
 
+                // Index into AppSearch for OS-level search
+                launch {
+                    searchIndexer.indexMarkets(searchService.allMarkets())
+                }
+
                 // Re-run search if there's an active query
                 val query = _uiState.value.query
                 if (query.length >= 4) {
                     performSearch(query)
                 }
             } catch (e: Exception) {
+                Log.e("TruthPulse", "loadMarkets: error", e)
                 val hasCached = searchService.marketCount > 0
                 _uiState.update {
                     it.copy(
@@ -81,6 +94,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun updateQuery(query: String) {
+        Log.d("TruthPulse", "updateQuery: '$query'")
         _uiState.update { it.copy(query = query) }
 
         searchJob?.cancel()
@@ -99,6 +113,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
 
     private fun performSearch(query: String) {
         val results = searchService.search(query)
+        Log.d("TruthPulse", "performSearch: '$query' -> ${results.size} results")
         _uiState.update {
             it.copy(results = results)
         }

@@ -120,6 +120,18 @@ public struct MarketSummary: Identifiable, Hashable, Codable, Sendable {
             ?? URL(string: "https://kalshi.com")!
     }
 
+    /// URL to the specific contract page — more likely to deep-link into the Kalshi app.
+    public var deepLinkURL: URL {
+        if let seriesTicker, let eventTicker {
+            let series = seriesTicker.lowercased()
+            let event = eventTicker.lowercased()
+            if let url = URL(string: "https://kalshi.com/markets/\(series)/m/\(event)") {
+                return url
+            }
+        }
+        return resolvedWebURL
+    }
+
     public var displayOdds: Int? {
         let price = yesPrice ?? lastPrice
         guard let price else { return nil }

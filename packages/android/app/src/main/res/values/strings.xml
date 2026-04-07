@@ -14,4 +14,5 @@
     <string name="market_count">%d markets loaded</string>
     <string name="refresh_failed">Failed to refresh markets</string>
     <string name="search_label">TruthPulse Search</string>
+    <string name="search_settings_description">Search Kalshi prediction markets</string>
 </resources>

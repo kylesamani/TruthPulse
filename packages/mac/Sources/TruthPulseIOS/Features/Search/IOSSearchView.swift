@@ -122,9 +122,6 @@ struct IOSSearchView: View {
     }
 
     private func openMarket(_ market: MarketSummary) {
-        let url = market.resolvedWebURL
-        #if canImport(UIKit)
-        UIApplication.shared.open(url)
-        #endif
+        state.openMarket(market)
     }
 }

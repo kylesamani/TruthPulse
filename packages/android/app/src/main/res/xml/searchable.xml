@@ -3,7 +3,10 @@
     android:label="@string/search_label"
     android:hint="@string/search_hint"
     android:searchSuggestAuthority="com.truthpulse.search"
+    android:searchSuggestPath="search_suggest_query"
     android:searchSuggestIntentAction="android.intent.action.VIEW"
+    android:searchSuggestIntentData="https://kalshi.com"
     android:searchSuggestSelection=" ?"
     android:includeInGlobalSearch="true"
-    android:searchSettingsDescription="@string/app_name" />
+    android:searchSettingsDescription="@string/search_settings_description"
+    android:searchSuggestThreshold="4" />

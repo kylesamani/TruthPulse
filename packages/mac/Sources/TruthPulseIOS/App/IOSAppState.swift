@@ -2,7 +2,9 @@
 import UIKit
 #endif
 import Foundation
+import SwiftUI
 import CoreSpotlight
+import SafariServices
 import TruthPulseCore
 
 enum IOSSyncInterval: Int, CaseIterable {
@@ -147,7 +149,24 @@ final class IOSAppState: ObservableObject {
               let identifier = userActivity.userInfo?[CSSearchableItemActivityIdentifier] as? String,
               let url = URL(string: identifier) else { return }
         #if canImport(UIKit)
-        UIApplication.shared.open(url)
+        let safari = SFSafariViewController(url: url)
+        safari.preferredControlTintColor = UIColor(Color.truthPulseMint)
+        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let root = scene.windows.first?.rootViewController {
+            root.present(safari, animated: true)
+        }
+        #endif
+    }
+
+    func openMarket(_ market: MarketSummary) {
+        #if canImport(UIKit)
+        let url = market.resolvedWebURL
+        let safari = SFSafariViewController(url: url)
+        safari.preferredControlTintColor = UIColor(Color.truthPulseMint)
+        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let root = scene.windows.first?.rootViewController {
+            root.present(safari, animated: true)
+        }
         #endif
     }
 
