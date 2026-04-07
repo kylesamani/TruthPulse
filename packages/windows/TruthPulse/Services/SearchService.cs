@@ -12,6 +12,7 @@ public sealed class SearchService
     private readonly KalshiApiClient _apiClient;
     private readonly MarketCacheStore _cacheStore;
     private readonly RankingPolicy _rankingPolicy = new();
+    private readonly SynonymTable _synonymTable = new();
     private readonly Dictionary<string, MarketTrend> _trendCache = new();
     private readonly SemaphoreSlim _lock = new(1, 1);
 
@@ -87,6 +88,7 @@ public sealed class SearchService
 
         var normalizedQuery = RankingPolicy.NormalizeSearchText(trimmed);
         var tokens = RankingPolicy.SearchTokens(normalizedQuery);
+        var expandedTokens = _synonymTable.ExpandTokens(tokens);
 
         List<IndexedSearchCandidate> candidates;
         _lock.Wait();
@@ -97,7 +99,12 @@ public sealed class SearchService
                 {
                     if (entry.Haystack.Contains(normalizedQuery, StringComparison.Ordinal))
                         return true;
-                    return tokens.All(t => entry.Haystack.Contains(t, StringComparison.Ordinal));
+                    if (tokens.All(t => entry.Haystack.Contains(t, StringComparison.Ordinal)))
+                        return true;
+                    // Match with synonym-expanded tokens
+                    if (expandedTokens.Count > tokens.Count)
+                        return expandedTokens.All(t => entry.Haystack.Contains(t, StringComparison.Ordinal));
+                    return false;
                 })
                 .Select(entry => new IndexedSearchCandidate(entry.Market, 0))
                 .ToList();

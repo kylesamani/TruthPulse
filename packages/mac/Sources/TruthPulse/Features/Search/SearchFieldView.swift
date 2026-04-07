@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import TruthPulseCore
 
 struct SearchFieldView: NSViewRepresentable {
     @Binding var text: String

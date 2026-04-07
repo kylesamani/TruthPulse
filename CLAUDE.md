@@ -3,7 +3,7 @@
 ## What This Is
 Instant search across all open Kalshi prediction markets. Live odds, trend data, keyboard-driven. Zero backend.
 
-Available as a macOS menu bar app, Windows system tray app, and Raycast extension.
+Available as a macOS menu bar app, Windows system tray app, Android app, and Raycast extension.
 
 ## Repository Structure
 
@@ -11,6 +11,7 @@ Available as a macOS menu bar app, Windows system tray app, and Raycast extensio
 packages/
 ├── mac/          # macOS menu bar app (Swift/SwiftUI)
 ├── windows/      # Windows system tray app (C#/WinUI 3/.NET 8)
+├── android/      # Android app (Kotlin/Jetpack Compose)
 └── raycast/      # Raycast extension (TypeScript/React)
 ```
 
@@ -66,6 +67,44 @@ packages/mac/Sources/TruthPulse/
 ### Stack
 - C# / WinUI 3 / .NET 8, system tray with global hotkey
 
+## Android App (`packages/android/`)
+
+### Commands
+- `cd packages/android && ./gradlew assembleDebug` -- Build debug APK
+- `cd packages/android && ./gradlew assembleRelease` -- Build release APK
+- `cd packages/android && ./gradlew installDebug` -- Install on connected device
+
+### Stack
+- **Language**: Kotlin 2.1
+- **Platform**: Android 8+ (API 26)
+- **UI**: Jetpack Compose + Material3
+- **Networking**: OkHttp + kotlinx.serialization
+- **Architecture**: MVVM (ViewModel + StateFlow)
+- **Search**: AppSearch + Global Search ContentProvider
+
+### Structure
+```
+packages/android/app/src/main/java/com/truthpulse/
+├── TruthPulseApp.kt          # Application class
+├── MainActivity.kt            # Single activity, Compose
+├── data/
+│   ├── KalshiApiClient.kt    # REST client (OkHttp + kotlinx.serialization)
+│   ├── MarketModels.kt       # Data classes
+│   ├── TrendModels.kt        # Trend data classes
+│   ├── MarketCacheStore.kt   # JSON file cache
+│   └── SynonymTable.kt       # Synonym loading + expansion
+├── search/
+│   ├── SearchService.kt      # Index + search + synonym expansion
+│   ├── RankingPolicy.kt      # Multi-signal ranking
+│   └── SearchIndexer.kt      # Global Search provider
+└── ui/
+    ├── SearchScreen.kt        # Main Compose screen
+    ├── SearchViewModel.kt     # ViewModel with StateFlow
+    ├── ResultRow.kt           # Market result composable
+    ├── SparklineChart.kt      # Canvas-based sparkline
+    └── TruthPulseTheme.kt    # Material3 theme with mint accent
+```
+
 ## Raycast Extension (`packages/raycast/`)
 
 ### Commands
@@ -81,4 +120,4 @@ packages/mac/Sources/TruthPulse/
 - **Local search index**: Markets cached locally for instant typeahead
 - **Lazy trend loading**: Candlestick data fetched on selection, not upfront
 - **Field-aware ranking**: Title matches ranked higher than description matches, boosted by volume/liquidity
-- **Three independent ports**: Each platform is self-contained, no shared code
+- **Four independent ports**: Each platform is self-contained, no shared code

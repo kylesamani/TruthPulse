@@ -1,4 +1,5 @@
 import SwiftUI
+import TruthPulseCore
 
 @main
 struct TruthPulseApp: App {

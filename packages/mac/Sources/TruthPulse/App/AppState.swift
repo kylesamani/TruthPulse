@@ -1,6 +1,38 @@
 import AppKit
 import Combine
 import Foundation
+import TruthPulseCore
+
+enum SyncInterval: Int, CaseIterable {
+    case oneMinute = 60
+    case oneHour = 3600
+    case threeHours = 10800
+    case sixHours = 21600
+    case twelveHours = 43200
+    case twentyFourHours = 86400
+
+    var label: String {
+        switch self {
+        case .oneMinute: return "1 minute"
+        case .oneHour: return "1 hour"
+        case .threeHours: return "3 hours"
+        case .sixHours: return "6 hours"
+        case .twelveHours: return "12 hours"
+        case .twentyFourHours: return "24 hours"
+        }
+    }
+
+    private static let key = "syncIntervalSeconds"
+
+    static func load() -> SyncInterval {
+        let raw = UserDefaults.standard.integer(forKey: key)
+        return SyncInterval(rawValue: raw) ?? .oneMinute
+    }
+
+    static func save(_ interval: SyncInterval) {
+        UserDefaults.standard.set(interval.rawValue, forKey: key)
+    }
+}
 
 struct SearchPanelMetrics: Equatable {
     let width: CGFloat
@@ -22,8 +54,12 @@ final class AppState: ObservableObject {
     @Published private(set) var hasCachedMarkets = false
     @Published private(set) var errorMessage: String?
     @Published private(set) var lastSyncDate: Date?
+    @Published private(set) var spotlightIndexedCount: Int = 0
+    @Published private(set) var spotlightLastIndexed: Date?
+    @Published var syncInterval: SyncInterval = SyncInterval.load()
 
     private let service: SearchService
+    private let spotlightIndexer = SpotlightIndexer()
     private var refreshTask: Task<Void, Never>?
     private var searchTask: Task<Void, Never>?
     private var queryGeneration: UInt64 = 0
@@ -31,6 +67,14 @@ final class AppState: ObservableObject {
     init(service: SearchService) {
         self.service = service
         self.hasCachedMarkets = service.hasCacheOnDisk
+
+        NotificationCenter.default.addObserver(forName: .truthPulseSpotlightIndexed, object: nil, queue: .main) { [weak self] notification in
+            guard let self, let count = notification.userInfo?["count"] as? Int else { return }
+            Task { @MainActor in
+                self.spotlightIndexedCount = count
+                self.spotlightLastIndexed = Date()
+            }
+        }
     }
 
     var selectedResult: SearchResult? {
@@ -82,12 +126,17 @@ final class AppState: ObservableObject {
             hasCachedMarkets = cached
             if cached {
                 lastSyncDate = await service.lastCacheDate()
+                // Index cached markets into Spotlight immediately
+                let markets = await service.allMarkets
+                if !markets.isEmpty {
+                    spotlightIndexer.indexMarkets(markets)
+                }
             }
 
-            // Only refresh from Kalshi if >60s since last sync
+            // Only refresh from Kalshi if enough time has passed since last sync
             let needsRefresh: Bool
             if let lastSync = lastSyncDate {
-                needsRefresh = Date().timeIntervalSince(lastSync) > 60
+                needsRefresh = Date().timeIntervalSince(lastSync) > Double(syncInterval.rawValue)
             } else {
                 needsRefresh = true
             }
@@ -108,6 +157,11 @@ final class AppState: ObservableObject {
             lastSyncDate = Date()
             hasCachedMarkets = true
             await updateResults()
+
+            // Re-index Spotlight after successful refresh (fire-and-forget,
+            // completion arrives via NotificationCenter)
+            let markets = await service.allMarkets
+            spotlightIndexer.indexMarkets(markets)
         } catch {
             errorMessage = error.localizedDescription
         }

@@ -44,6 +44,7 @@ public partial class SearchViewModel : ObservableObject
     private int _resultCount;
 
     private readonly Dictionary<string, MarketTrend> _trendCache = new();
+    private int _syncIntervalSeconds = 60;
 
     public ObservableCollection<SearchResult> Results { get; } = new();
 
@@ -120,7 +121,7 @@ public partial class SearchViewModel : ObservableObject
             UpdateSyncText();
 
             var lastSync = await _searchService.LastCacheDateAsync();
-            if (lastSync == null || (DateTime.UtcNow - lastSync.Value).TotalSeconds > 60)
+            if (lastSync == null || (DateTime.UtcNow - lastSync.Value).TotalSeconds > _syncIntervalSeconds)
             {
                 await RefreshMarketsAsync();
             }
@@ -203,6 +204,11 @@ public partial class SearchViewModel : ObservableObject
         {
             SelectedTrend = null;
         }
+    }
+
+    public void SetSyncInterval(int seconds)
+    {
+        _syncIntervalSeconds = seconds;
     }
 
     public void MoveSelection(int offset)

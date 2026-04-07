@@ -1,4 +1,5 @@
 import SwiftUI
+import TruthPulseCore
 
 struct ResultRowView: View {
     let result: SearchResult

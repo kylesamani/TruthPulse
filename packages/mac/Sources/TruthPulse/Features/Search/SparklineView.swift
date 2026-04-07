@@ -1,4 +1,5 @@
 import SwiftUI
+import TruthPulseCore
 
 struct SparklineView: View {
     let trend: MarketTrend?

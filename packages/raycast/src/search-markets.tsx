@@ -1,5 +1,7 @@
-import { List, ActionPanel, Action, Icon, Color, Cache } from "@raycast/api";
+import { List, ActionPanel, Action, Icon, Color, Cache, environment } from "@raycast/api";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import * as fs from "fs";
+import * as path from "path";
 
 // ─── Models ──────────────────────────────────────────────────────────────────
 
@@ -216,6 +218,56 @@ function normalizeText(s: string): string {
     .trim();
 }
 
+// ─── Synonym Table ──────────────────────────────────────────────────────────
+
+type SynonymMap = Record<string, string[]>;
+
+function loadSynonyms(): SynonymMap {
+  try {
+    // Look for synonyms.json relative to the extension
+    const candidates = [
+      path.join(environment.assetsPath, "synonyms.json"),
+      path.join(__dirname, "..", "..", "..", "shared", "synonyms.json"),
+      path.join(__dirname, "..", "synonyms.json"),
+    ];
+    for (const p of candidates) {
+      if (fs.existsSync(p)) {
+        const data = JSON.parse(fs.readFileSync(p, "utf-8"));
+        const result: SynonymMap = {};
+        for (const [key, values] of Object.entries(data.synonyms ?? {})) {
+          result[key.toLowerCase()] = values as string[];
+        }
+        return result;
+      }
+    }
+  } catch {
+    // Silent fallback
+  }
+  return {};
+}
+
+const SYNONYMS = loadSynonyms();
+
+function expandTokens(tokens: string[]): string[] {
+  const expanded = [...tokens];
+  for (const token of tokens) {
+    const synonyms = SYNONYMS[token];
+    if (synonyms) {
+      for (const synonym of synonyms) {
+        const synTokens = normalizeText(synonym)
+          .split(/[^a-z0-9]+/)
+          .filter((t) => t.length > 0);
+        for (const st of synTokens) {
+          if (!expanded.includes(st)) {
+            expanded.push(st);
+          }
+        }
+      }
+    }
+  }
+  return expanded;
+}
+
 interface IndexedMarket {
   market: MarketSummary;
   haystack: string;
@@ -324,10 +376,17 @@ function searchMarkets(
   const tokens = query.split(/[^a-z0-9]+/).filter((t) => t.length > 0);
   if (tokens.length === 0) return [];
 
-  // Two-pass filter
+  const expanded = expandTokens(tokens);
+
+  // Two-pass filter with synonym expansion
   const candidates = index.filter((im) => {
     if (im.haystack.includes(query)) return true;
-    return tokens.every((t) => im.haystack.includes(t));
+    if (tokens.every((t) => im.haystack.includes(t))) return true;
+    // Match with synonym-expanded tokens
+    if (expanded.length > tokens.length) {
+      return expanded.every((t) => im.haystack.includes(t));
+    }
+    return false;
   });
 
   const results: SearchResult[] = candidates.map((im) => {

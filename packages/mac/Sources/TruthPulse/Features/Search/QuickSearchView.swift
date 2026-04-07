@@ -1,4 +1,5 @@
 import SwiftUI
+import TruthPulseCore
 
 struct QuickSearchView: View {
     @ObservedObject private var state: AppState

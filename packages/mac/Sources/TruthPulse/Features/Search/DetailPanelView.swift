@@ -1,4 +1,5 @@
 import SwiftUI
+import TruthPulseCore
 
 struct DetailPanelView: View {
     let result: SearchResult?

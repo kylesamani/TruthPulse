@@ -1,22 +1,22 @@
 import Foundation
 
-actor MarketCacheStore {
+public actor MarketCacheStore {
     private let cacheURL: URL
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
 
-    init(appSupportDirectory: URL) {
+    public init(appSupportDirectory: URL) {
         self.cacheURL = appSupportDirectory.appendingPathComponent("open-markets-cache.json")
         encoder.dateEncodingStrategy = .iso8601
         decoder.dateDecodingStrategy = .iso8601
     }
 
     /// Fast check — no file I/O beyond a stat call.
-    nonisolated func cacheFileExists() -> Bool {
+    nonisolated public func cacheFileExists() -> Bool {
         FileManager.default.fileExists(atPath: cacheURL.path)
     }
 
-    func savedAt() -> Date? {
+    public func savedAt() -> Date? {
         guard
             let data = try? Data(contentsOf: cacheURL),
             let payload = try? decoder.decode(CachedMarketsPayload.self, from: data)
@@ -26,7 +26,7 @@ actor MarketCacheStore {
         return payload.savedAt
     }
 
-    func loadMarkets() -> [MarketSummary] {
+    public func loadMarkets() -> [MarketSummary] {
         guard
             let data = try? Data(contentsOf: cacheURL),
             let payload = try? decoder.decode(CachedMarketsPayload.self, from: data)
@@ -40,7 +40,7 @@ actor MarketCacheStore {
         }
     }
 
-    func saveMarkets(_ markets: [MarketSummary]) {
+    public func saveMarkets(_ markets: [MarketSummary]) {
         let payload = CachedMarketsPayload(savedAt: Date(), markets: markets)
         guard let data = try? encoder.encode(payload) else { return }
         try? data.write(to: cacheURL, options: .atomic)

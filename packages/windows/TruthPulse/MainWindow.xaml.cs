@@ -16,8 +16,11 @@ namespace TruthPulse;
 public partial class MainWindow : Window
 {
     private readonly SearchViewModel _viewModel;
+    public SearchViewModel ViewModel => _viewModel;
 
-    public MainWindow()
+    public MainWindow() : this(null) { }
+
+    public MainWindow(TruthPulse.Services.SearchService? searchService)
     {
         InitializeComponent();
 
@@ -27,7 +30,9 @@ public partial class MainWindow : Window
         }
         catch { }
 
-        _viewModel = new SearchViewModel();
+        _viewModel = searchService != null
+            ? new SearchViewModel(searchService)
+            : new SearchViewModel();
         _viewModel.PropertyChanged += ViewModel_PropertyChanged;
         _viewModel.ResultsChanged += OnResultsChanged;
         _viewModel.TrendCacheUpdated += OnTrendCacheUpdated;

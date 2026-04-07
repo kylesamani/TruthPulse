@@ -6,33 +6,34 @@ private struct IndexedMarket: Sendable {
     let haystack: String // pre-normalized, joined searchable text
 }
 
-actor SearchService {
+public actor SearchService {
     private let apiClient: KalshiAPIClient
     private let cacheStore: MarketCacheStore
     private let rankingPolicy = RankingPolicy()
+    private let synonymTable = SynonymTable()
     private var trendCache: [String: MarketTrend] = [:]
     private var lastRefresh: Date?
     private var markets: [MarketSummary] = []
     private var index: [IndexedMarket] = []
 
     /// Synchronous check — no actor hop needed. Safe because it only does a file stat.
-    nonisolated let hasCacheOnDisk: Bool
+    nonisolated public let hasCacheOnDisk: Bool
 
-    init(apiClient: KalshiAPIClient = KalshiAPIClient()) throws {
+    public init(apiClient: KalshiAPIClient = KalshiAPIClient()) throws {
         let appSupport = try SearchService.makeAppSupportDirectory()
         self.apiClient = apiClient
         self.cacheStore = MarketCacheStore(appSupportDirectory: appSupport)
         self.hasCacheOnDisk = cacheStore.cacheFileExists()
     }
 
-    func bootstrapIfNeeded() async throws {
+    public func bootstrapIfNeeded() async throws {
         if markets.isEmpty {
             let loaded = await cacheStore.loadMarkets()
             setMarkets(loaded)
         }
     }
 
-    func hasLoadedMarkets() async -> Bool {
+    public func hasLoadedMarkets() async -> Bool {
         if markets.isEmpty {
             let loaded = await cacheStore.loadMarkets()
             setMarkets(loaded)
@@ -40,11 +41,11 @@ actor SearchService {
         return !markets.isEmpty
     }
 
-    func lastCacheDate() async -> Date? {
+    public func lastCacheDate() async -> Date? {
         await cacheStore.savedAt()
     }
 
-    func refreshOpenMarkets(force: Bool = false) async throws {
+    public func refreshOpenMarkets(force: Bool = false) async throws {
         if !force, let lastRefresh, Date().timeIntervalSince(lastRefresh) < 45 {
             return
         }
@@ -73,24 +74,35 @@ actor SearchService {
         }
     }
 
-    func search(query: String, limit: Int = 30) -> [SearchResult] {
+    /// All currently loaded markets (for Spotlight indexing).
+    public var allMarkets: [MarketSummary] { markets }
+
+    public func search(query: String, limit: Int = 30) -> [SearchResult] {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return [] }
 
         let normalizedQuery = trimmed.normalizedSearchText
         let tokens = normalizedQuery.searchTokens
+        let expandedTokens = synonymTable.expandTokens(tokens)
 
         let candidates = index
             .filter { entry in
+                // Match on original query phrase
                 if entry.haystack.contains(normalizedQuery) { return true }
-                return tokens.allSatisfy { entry.haystack.contains($0) }
+                // Match if all original tokens present
+                if tokens.allSatisfy({ entry.haystack.contains($0) }) { return true }
+                // Match if all expanded tokens (with synonyms) present
+                if expandedTokens.count > tokens.count {
+                    return expandedTokens.allSatisfy { entry.haystack.contains($0) }
+                }
+                return false
             }
             .map { IndexedSearchCandidate(market: $0.market, baseRank: 0) }
 
         return Array(rankingPolicy.rank(query: query, candidates: candidates).prefix(limit))
     }
 
-    func trend(for marketTicker: String, seriesTicker: String, window: TrendWindow) async throws -> MarketTrend {
+    public func trend(for marketTicker: String, seriesTicker: String, window: TrendWindow) async throws -> MarketTrend {
         let key = cacheKey(for: marketTicker, window: window)
         if let cached = trendCache[key], Date().timeIntervalSince(cached.updatedAt) < 300 {
             return cached
@@ -105,7 +117,7 @@ actor SearchService {
         "\(marketTicker)::\(window.rawValue)"
     }
 
-    static func makeAppSupportDirectory() throws -> URL {
+    public static func makeAppSupportDirectory() throws -> URL {
         let base = try FileManager.default.url(
             for: .applicationSupportDirectory,
             in: .userDomainMask,

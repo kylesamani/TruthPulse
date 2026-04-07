@@ -1,6 +1,6 @@
 import Foundation
 
-enum JSONValue: Decodable, Sendable {
+public enum JSONValue: Decodable, Sendable {
     case string(String)
     case number(Double)
     case bool(Bool)
@@ -8,7 +8,7 @@ enum JSONValue: Decodable, Sendable {
     case array([JSONValue])
     case null
 
-    init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
 
         if container.decodeNil() {
@@ -28,7 +28,7 @@ enum JSONValue: Decodable, Sendable {
         }
     }
 
-    var stringValue: String? {
+    public var stringValue: String? {
         switch self {
         case .string(let value):
             value
@@ -41,12 +41,12 @@ enum JSONValue: Decodable, Sendable {
         }
     }
 
-    var objectValue: [String: JSONValue]? {
+    public var objectValue: [String: JSONValue]? {
         guard case .object(let value) = self else { return nil }
         return value
     }
 
-    func collectURLStrings() -> [String] {
+    public func collectURLStrings() -> [String] {
         switch self {
         case .string(let value):
             return value.lowercased().contains("http") ? [value] : []

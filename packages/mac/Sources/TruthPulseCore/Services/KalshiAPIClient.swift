@@ -167,12 +167,12 @@ struct KalshiCandleDTO: Decodable {
     }
 }
 
-struct KalshiAPIClient: Sendable {
+public struct KalshiAPIClient: Sendable {
     private let session: URLSession
     private let decoder: JSONDecoder
     private let baseURL = URL(string: "https://api.elections.kalshi.com/trade-api/v2")!
 
-    init() {
+    public init() {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.timeoutIntervalForRequest = 20
         configuration.timeoutIntervalForResource = 30
@@ -181,7 +181,7 @@ struct KalshiAPIClient: Sendable {
         self.decoder = JSONDecoder()
     }
 
-    func fetchOpenMarkets() async throws -> [MarketSummary] {
+    public func fetchOpenMarkets() async throws -> [MarketSummary] {
         var cursor: String?
         var allMarkets: [MarketSummary] = []
 
@@ -214,7 +214,7 @@ struct KalshiAPIClient: Sendable {
         return allMarkets
     }
 
-    func fetchTrend(for marketTicker: String, seriesTicker: String, window: TrendWindow) async throws -> MarketTrend {
+    public func fetchTrend(for marketTicker: String, seriesTicker: String, window: TrendWindow) async throws -> MarketTrend {
         let endDate = Date()
         let startDate = endDate.addingTimeInterval(-window.duration)
         let path = "series/\(seriesTicker)/markets/\(marketTicker)/candlesticks"

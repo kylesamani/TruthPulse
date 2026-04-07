@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import TruthPulse
+@testable import TruthPulseCore
 
 struct RankingPolicyTests {
     @Test
@@ -101,7 +101,6 @@ struct RankingPolicyTests {
             noLabel: noLabel,
             eventTitle: nil,
             eventSubtitle: nil,
-            description: description,
             category: "Politics",
             status: "open",
             lastPrice: 0.52,

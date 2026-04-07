@@ -1,6 +1,8 @@
 import AppKit
 import Combine
+import CoreSpotlight
 import SwiftUI
+import TruthPulseCore
 
 @MainActor
 final class TruthPulseAppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
@@ -14,6 +16,7 @@ final class TruthPulseAppDelegate: NSObject, NSApplicationDelegate, NSPopoverDel
     private let updater = AutoUpdater()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        NSLog("[TruthPulse] applicationDidFinishLaunching")
         do {
             let service = try SearchService()
             let state = AppState(service: service)
@@ -31,6 +34,16 @@ final class TruthPulseAppDelegate: NSObject, NSApplicationDelegate, NSPopoverDel
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         togglePopover(nil)
         return false
+    }
+
+    func application(_ application: NSApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([any NSUserActivityRestoring]) -> Void) -> Bool {
+        guard userActivity.activityType == CSSearchableItemActionType,
+              let identifier = userActivity.userInfo?[CSSearchableItemActivityIdentifier] as? String,
+              let url = URL(string: identifier) else {
+            return false
+        }
+        NSWorkspace.shared.open(url)
+        return true
     }
 
     private func configureStatusItem() {
@@ -56,8 +69,23 @@ final class TruthPulseAppDelegate: NSObject, NSApplicationDelegate, NSPopoverDel
         let updateItem = NSMenuItem(title: "Check for Updates", action: #selector(checkForUpdatesAction), keyEquivalent: "")
         updateItem.target = self
 
+        let spotlightItem = NSMenuItem(title: "Spotlight: not indexed yet", action: nil, keyEquivalent: "")
+        spotlightItem.isEnabled = false
+        spotlightItem.tag = 999
+
+        let syncItem = NSMenuItem(title: "Sync Interval", action: nil, keyEquivalent: "")
+        let syncSubmenu = NSMenu()
+        for interval in SyncInterval.allCases {
+            let mi = NSMenuItem(title: interval.label, action: #selector(changeSyncInterval(_:)), keyEquivalent: "")
+            mi.target = self
+            mi.tag = interval.rawValue
+            mi.state = interval == SyncInterval.load() ? .on : .off
+            syncSubmenu.addItem(mi)
+        }
+        syncItem.submenu = syncSubmenu
+
         statusMenu.autoenablesItems = false
-        statusMenu.items = [hotkeyItem, feedbackItem, updateItem, .separator(), quitItem]
+        statusMenu.items = [hotkeyItem, syncItem, feedbackItem, updateItem, .separator(), spotlightItem, .separator(), quitItem]
     }
 
     private func configurePopover(with state: AppState) {
@@ -81,6 +109,30 @@ final class TruthPulseAppDelegate: NSObject, NSApplicationDelegate, NSPopoverDel
             self.applyPopoverSize(for: state.panelMetrics)
         }
         .store(in: &cancellables)
+
+        state.$spotlightIndexedCount
+            .combineLatest(state.$spotlightLastIndexed)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] count, date in
+                self?.updateSpotlightMenuItem(count: count, lastIndexed: date)
+            }
+            .store(in: &cancellables)
+    }
+
+    private func updateSpotlightMenuItem(count: Int, lastIndexed: Date?) {
+        NSLog("[TruthPulse] updateSpotlightMenuItem called: count=%d, date=%@", count, lastIndexed.map { "\($0)" } ?? "nil")
+        guard let item = statusMenu.item(withTag: 999) else {
+            NSLog("[TruthPulse] Could not find menu item with tag 999")
+            return
+        }
+        if count == 0 {
+            item.title = "Spotlight: not indexed yet"
+        } else if let date = lastIndexed {
+            let ago = Formatters.relativeString(for: date, relativeTo: Date())
+            item.title = "Spotlight: \(count.formatted()) markets indexed, \(ago)"
+        } else {
+            item.title = "Spotlight: \(count.formatted()) markets indexed"
+        }
     }
 
     // MARK: - Global Hotkey
@@ -106,6 +158,19 @@ final class TruthPulseAppDelegate: NSObject, NSApplicationDelegate, NSPopoverDel
         NSApp.activate(ignoringOtherApps: true)
         recorderController?.showWindow(nil)
         recorderController?.window?.makeKeyAndOrderFront(nil)
+    }
+
+    @objc
+    private func changeSyncInterval(_ sender: NSMenuItem) {
+        guard let interval = SyncInterval(rawValue: sender.tag) else { return }
+        SyncInterval.save(interval)
+        state?.syncInterval = interval
+        // Update checkmarks
+        if let submenu = sender.menu {
+            for item in submenu.items {
+                item.state = item.tag == sender.tag ? .on : .off
+            }
+        }
     }
 
     private func updateHotkeyMenuItem() {

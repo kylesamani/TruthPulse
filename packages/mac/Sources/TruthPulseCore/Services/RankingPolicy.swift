@@ -1,12 +1,19 @@
 import Foundation
 
-struct IndexedSearchCandidate: Sendable {
-    let market: MarketSummary
-    let baseRank: Double
+public struct IndexedSearchCandidate: Sendable {
+    public let market: MarketSummary
+    public let baseRank: Double
+
+    public init(market: MarketSummary, baseRank: Double) {
+        self.market = market
+        self.baseRank = baseRank
+    }
 }
 
-struct RankingPolicy: Sendable {
-    func rank(query: String, candidates: [IndexedSearchCandidate]) -> [SearchResult] {
+public struct RankingPolicy: Sendable {
+    public init() {}
+
+    public func rank(query: String, candidates: [IndexedSearchCandidate]) -> [SearchResult] {
         let normalizedQuery = query.normalizedSearchText
         let tokens = normalizedQuery.searchTokens
 
@@ -193,7 +200,7 @@ struct RankingPolicy: Sendable {
     }
 }
 
-extension String {
+public extension String {
     var normalizedSearchText: String {
         folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
             .lowercased()

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TruthPulse</string>
+    <string name="search_hint">Search prediction markets...</string>
+    <string name="syncing_markets">Syncing markets...</string>
+    <string name="no_results">No markets found</string>
+    <string name="search_prompt">Type at least 4 characters to search</string>
+    <string name="yes_label">YES</string>
+    <string name="no_label">NO</string>
+    <string name="open_market">Open market on Kalshi</string>
+    <string name="market_odds">Market odds</string>
+    <string name="trend_chart">Price trend chart</string>
+    <string name="last_updated">Last updated %s</string>
+    <string name="market_count">%d markets loaded</string>
+    <string name="refresh_failed">Failed to refresh markets</string>
+    <string name="search_label">TruthPulse Search</string>
+</resources>

@@ -1,7 +1,9 @@
 import SwiftUI
 
-struct TruthPulseGlyph: Shape {
-    func path(in rect: CGRect) -> Path {
+public struct TruthPulseGlyph: Shape {
+    public init() {}
+
+    public func path(in rect: CGRect) -> Path {
         var path = Path()
         let w = rect.width
         let h = rect.height
@@ -22,13 +24,20 @@ struct TruthPulseGlyph: Shape {
     }
 }
 
-struct TruthPulseMarkView: View {
-    var strokeColor: Color = .truthPulseMint
-    var background: Color = .truthPulseMintSoft
-    var size: CGFloat = 44
-    var lineWidth: CGFloat = 4
+public struct TruthPulseMarkView: View {
+    public var strokeColor: Color = .truthPulseMint
+    public var background: Color = .truthPulseMintSoft
+    public var size: CGFloat = 44
+    public var lineWidth: CGFloat = 4
 
-    var body: some View {
+    public init(strokeColor: Color = .truthPulseMint, background: Color = .truthPulseMintSoft, size: CGFloat = 44, lineWidth: CGFloat = 4) {
+        self.strokeColor = strokeColor
+        self.background = background
+        self.size = size
+        self.lineWidth = lineWidth
+    }
+
+    public var body: some View {
         RoundedRectangle(cornerRadius: size * 0.28, style: .continuous)
             .fill(background)
             .overlay {
@@ -40,8 +49,10 @@ struct TruthPulseMarkView: View {
     }
 }
 
-struct TruthPulseWordmarkView: View {
-    var body: some View {
+public struct TruthPulseWordmarkView: View {
+    public init() {}
+
+    public var body: some View {
         HStack(alignment: .center, spacing: 10) {
             TruthPulseMarkView(size: 34, lineWidth: 3.4)
 

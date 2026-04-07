@@ -1,8 +1,8 @@
 import Foundation
 import SwiftUI
 
-enum Formatters {
-    static let compactNumber: NumberFormatter = {
+public enum Formatters {
+    public static let compactNumber: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.maximumFractionDigits = 1
@@ -12,14 +12,14 @@ enum Formatters {
     }()
 
     @MainActor
-    static func relativeString(for date: Date, relativeTo referenceDate: Date) -> String {
+    public static func relativeString(for date: Date, relativeTo referenceDate: Date) -> String {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
         return formatter.localizedString(for: date, relativeTo: referenceDate)
     }
 }
 
-extension Double {
+public extension Double {
     var compactVolumeString: String {
         let value = self
         switch value {
@@ -33,7 +33,7 @@ extension Double {
     }
 }
 
-extension String {
+public extension String {
     func highlightAttributedString(ranges: [TextHighlightRange], accent: Color = .kalshiMint) -> AttributedString {
         var attributed = AttributedString(self)
         let nsString = self as NSString
@@ -50,7 +50,7 @@ extension String {
     }
 }
 
-extension Color {
+public extension Color {
     static let truthPulseMint = Color(red: 0.06, green: 0.77, blue: 0.54)
     static let truthPulseMintDeep = Color(red: 0.03, green: 0.59, blue: 0.42)
     static let truthPulseMintSoft = Color(red: 0.90, green: 0.97, blue: 0.93)
