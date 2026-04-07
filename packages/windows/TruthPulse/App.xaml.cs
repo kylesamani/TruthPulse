@@ -149,13 +149,15 @@ public partial class App : Application
 
         var contextMenu = new System.Windows.Controls.ContextMenu();
 
-        var changeHotkeyItem = new System.Windows.Controls.MenuItem { Header = "Change shortcut..." };
+        var changeHotkeyItem = new System.Windows.Controls.MenuItem { Header = "Change global hotkey" };
         changeHotkeyItem.Click += (_, _) => ShowChangeHotkeyDialog();
         contextMenu.Items.Add(changeHotkeyItem);
 
         var syncItem = new System.Windows.Controls.MenuItem { Header = "Sync Interval" };
-        foreach (var (seconds, label) in SyncIntervalOptions)
+        for (int si = 0; si < SyncIntervalOptions.Length; si++)
         {
+            var seconds = SyncIntervalOptions[si].Seconds;
+            var label = SyncIntervalOptions[si].Label;
             var mi = new System.Windows.Controls.MenuItem
             {
                 Header = label,
@@ -474,14 +476,21 @@ public partial class App : Application
         public int SyncIntervalSeconds { get; set; } = 60;
     }
 
-    public static readonly (int Seconds, string Label)[] SyncIntervalOptions =
+    public sealed class SyncIntervalOption
     {
-        (60, "1 minute"),
-        (3600, "1 hour"),
-        (10800, "3 hours"),
-        (21600, "6 hours"),
-        (43200, "12 hours"),
-        (86400, "24 hours"),
+        public int Seconds { get; }
+        public string Label { get; }
+        public SyncIntervalOption(int seconds, string label) { Seconds = seconds; Label = label; }
+    }
+
+    public static readonly SyncIntervalOption[] SyncIntervalOptions =
+    {
+        new(60, "1 minute"),
+        new(3600, "1 hour"),
+        new(10800, "3 hours"),
+        new(21600, "6 hours"),
+        new(43200, "12 hours"),
+        new(86400, "24 hours"),
     };
 
 }
