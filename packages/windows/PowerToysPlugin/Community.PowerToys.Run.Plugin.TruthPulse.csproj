@@ -11,22 +11,28 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
-  <!-- Reference PowerToys DLLs from installation directory -->
+  <!--
+    PowerToys DLL references. Set PowerToysLauncherDir to the directory
+    containing Wox.Plugin.dll on your machine. Common locations:
+      - %LOCALAPPDATA%\PowerToys                          (MSIX / Store install)
+      - C:\Program Files\PowerToys\modules\launcher       (MSI install)
+    Override at build time: dotnet build -p:PowerToysLauncherDir=C:\path\to\dir
+  -->
   <PropertyGroup>
-    <PowerToysDir>C:\Program Files\PowerToys\modules\launcher</PowerToysDir>
+    <PowerToysLauncherDir Condition="'$(PowerToysLauncherDir)' == ''">$(LOCALAPPDATA)\PowerToys</PowerToysLauncherDir>
   </PropertyGroup>
 
   <ItemGroup>
     <Reference Include="Wox.Plugin">
-      <HintPath>$(PowerToysDir)\Wox.Plugin.dll</HintPath>
+      <HintPath>$(PowerToysLauncherDir)\Wox.Plugin.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="Wox.Infrastructure">
-      <HintPath>$(PowerToysDir)\Wox.Infrastructure.dll</HintPath>
+      <HintPath>$(PowerToysLauncherDir)\Wox.Infrastructure.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="PowerToys.ManagedCommon">
-      <HintPath>$(PowerToysDir)\PowerToys.ManagedCommon.dll</HintPath>
+      <HintPath>$(PowerToysLauncherDir)\PowerToys.ManagedCommon.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>
