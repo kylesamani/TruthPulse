@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Text.Json;
-using System.Threading;
-using ManagedCommon;
 using Wox.Plugin;
 
 namespace Community.PowerToys.Run.Plugin.TruthPulse;
 
-public class Main : IPlugin, IDelayedExecutionPlugin, IPluginI18n
+public class Main : IPlugin
 {
     public static string PluginID => "B8F3E2A1D4C74F9E8A1B3C5D7E9F0A2B";
 
@@ -21,7 +19,6 @@ public class Main : IPlugin, IDelayedExecutionPlugin, IPluginI18n
     private string? _iconPath;
     private readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(5) };
 
-    // Try ports 47392-47401 (same range as SearchProvider)
     private const int BasePort = 47392;
     private const int MaxPort = 47401;
 
@@ -31,18 +28,8 @@ public class Main : IPlugin, IDelayedExecutionPlugin, IPluginI18n
         _iconPath = context.CurrentPluginMetadata.IcoPathDark;
     }
 
-    // Immediate query: return nothing (let delayed handle it)
     public List<Result> Query(Query query)
     {
-        return new List<Result>();
-    }
-
-    // Delayed query: call TruthPulse search provider over HTTP
-    public List<Result> Query(Query query, bool delayedExecution)
-    {
-        if (!delayedExecution)
-            return new List<Result>();
-
         var search = query.Search?.Trim();
         if (string.IsNullOrEmpty(search) || search.Length < 3)
         {
@@ -63,7 +50,6 @@ public class Main : IPlugin, IDelayedExecutionPlugin, IPluginI18n
             var encoded = Uri.EscapeDataString(search);
             string? json = null;
 
-            // Try each port in the range
             for (int port = BasePort; port <= MaxPort; port++)
             {
                 try
@@ -76,14 +62,8 @@ public class Main : IPlugin, IDelayedExecutionPlugin, IPluginI18n
                         break;
                     }
                 }
-                catch (HttpRequestException)
-                {
-                    continue;
-                }
-                catch (TaskCanceledException)
-                {
-                    continue;
-                }
+                catch (HttpRequestException) { continue; }
+                catch (TaskCanceledException) { continue; }
             }
 
             if (json == null)
@@ -158,10 +138,6 @@ public class Main : IPlugin, IDelayedExecutionPlugin, IPluginI18n
             };
         }
     }
-
-    public string GetTranslatedPluginTitle() => Name;
-
-    public string GetTranslatedPluginDescription() => Description;
 
     private sealed class SearchProviderResult
     {

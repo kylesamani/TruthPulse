@@ -7,13 +7,28 @@
     <PlatformTarget>$(Platform)</PlatformTarget>
     <RootNamespace>Community.PowerToys.Run.Plugin.TruthPulse</RootNamespace>
     <AssemblyName>Community.PowerToys.Run.Plugin.TruthPulse</AssemblyName>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <!-- Reference PowerToys DLLs from installation directory -->
+  <PropertyGroup>
+    <PowerToysDir>C:\Program Files\PowerToys\modules\launcher</PowerToysDir>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="PowerToys.Common.UI" Version="0.89.0" />
-    <PackageReference Include="PowerToys.ManagedCommon" Version="0.89.0" />
-    <PackageReference Include="PowerToys.Settings.UI.Lib" Version="0.89.0" />
-    <PackageReference Include="Wox.Plugin" Version="0.89.0" />
+    <Reference Include="Wox.Plugin">
+      <HintPath>$(PowerToysDir)\Wox.Plugin.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Wox.Infrastructure">
+      <HintPath>$(PowerToysDir)\Wox.Infrastructure.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="PowerToys.ManagedCommon">
+      <HintPath>$(PowerToysDir)\PowerToys.ManagedCommon.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
