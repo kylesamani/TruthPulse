@@ -88,7 +88,7 @@ public sealed class SearchService
 
         var normalizedQuery = RankingPolicy.NormalizeSearchText(trimmed);
         var tokens = RankingPolicy.SearchTokens(normalizedQuery);
-        var expandedTokens = _synonymTable.ExpandTokens(tokens);
+        var expandedTokens = _synonymTable.ExpandTokens(tokens.ToList());
 
         List<IndexedSearchCandidate> candidates;
         _lock.Wait();
@@ -102,7 +102,7 @@ public sealed class SearchService
                     if (tokens.All(t => entry.Haystack.Contains(t, StringComparison.Ordinal)))
                         return true;
                     // Match with synonym-expanded tokens
-                    if (expandedTokens.Count > tokens.Count)
+                    if (expandedTokens.Count > tokens.Length)
                         return expandedTokens.All(t => entry.Haystack.Contains(t, StringComparison.Ordinal));
                     return false;
                 })
