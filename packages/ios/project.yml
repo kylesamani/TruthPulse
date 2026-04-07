@@ -1,0 +1,38 @@
+name: TruthPulseIOS
+options:
+  bundleIdPrefix: com.truthpulse
+  deploymentTarget:
+    iOS: "17.0"
+  xcodeVersion: "16.0"
+
+packages:
+  TruthPulsePackage:
+    path: ../mac
+
+targets:
+  TruthPulseIOS:
+    type: application
+    platform: iOS
+    sources:
+      - path: ../mac/Sources/TruthPulseIOS
+    resources:
+      - path: Assets.xcassets
+    dependencies:
+      - package: TruthPulsePackage
+        product: TruthPulseCore
+    settings:
+      base:
+        INFOPLIST_FILE: Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        PRODUCT_BUNDLE_IDENTIFIER: com.truthpulse.ios
+        PRODUCT_NAME: TruthPulse
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "6.0"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: false
+        CODE_SIGN_STYLE: Automatic
+    entitlements:
+      path: TruthPulse.entitlements
+      properties:
+        com.apple.developer.corespotlight.search-display: true

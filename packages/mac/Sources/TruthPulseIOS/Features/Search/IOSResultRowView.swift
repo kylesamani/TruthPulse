@@ -3,6 +3,7 @@ import TruthPulseCore
 
 struct IOSResultRowView: View {
     let result: SearchResult
+    let trend: MarketTrend?
 
     var body: some View {
         HStack(spacing: 12) {
@@ -20,16 +21,24 @@ struct IOSResultRowView: View {
                         .lineLimit(1)
                 }
 
-                if let volume = result.market.volume24h ?? result.market.volume {
-                    Text("Vol \(volume.compactVolumeString)")
-                        .font(.caption2.weight(.medium))
-                        .foregroundStyle(.tertiary)
+                HStack(spacing: 8) {
+                    if let volume = result.market.volume24h ?? result.market.volume {
+                        Text("Vol \(volume.compactVolumeString)")
+                            .font(.caption2.weight(.medium))
+                            .foregroundStyle(.tertiary)
+                    }
+
+                    if let trend, let delta = trend.delta {
+                        Text(deltaText(delta))
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(delta >= 0 ? Color.truthPulseMint : .red)
+                    }
                 }
             }
 
             Spacer(minLength: 8)
 
-            VStack(alignment: .trailing, spacing: 4) {
+            VStack(alignment: .trailing, spacing: 6) {
                 Text(result.emphasizedOdds.map { "\($0)%" } ?? "--")
                     .font(.title2.weight(.bold).monospacedDigit())
                     .foregroundStyle(Color.primary)
@@ -42,10 +51,15 @@ struct IOSResultRowView: View {
                     .padding(.vertical, 4)
                     .background(Color.truthPulseMintSoft)
                     .clipShape(Capsule())
+
+                if let trend, trend.points.count > 1 {
+                    IOSSparklineView(trend: trend)
+                        .frame(width: 60, height: 24)
+                }
             }
         }
         .padding(.vertical, 4)
-        .frame(minHeight: 44)
+        .frame(minHeight: 48)
     }
 
     private var secondaryLine: String? {
@@ -58,5 +72,10 @@ struct IOSResultRowView: View {
         }
         let combined = [result.market.yesLabel, result.market.noLabel].compactMap { $0 }.joined(separator: " / ")
         return combined.isEmpty ? nil : combined
+    }
+
+    private func deltaText(_ delta: Double) -> String {
+        let sign = delta >= 0 ? "+" : ""
+        return "\(sign)\(Int(delta)) pts"
     }
 }

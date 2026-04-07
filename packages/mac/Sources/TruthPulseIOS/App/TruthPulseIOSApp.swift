@@ -1,13 +1,17 @@
 import SwiftUI
+import CoreSpotlight
 import TruthPulseCore
 
-// @main — uncomment when building via Xcode for iOS target
+@main
 struct TruthPulseIOSApp: App {
     @StateObject private var state = IOSAppState()
 
     var body: some Scene {
         WindowGroup {
             IOSSearchView(state: state)
+                .onContinueUserActivity(CSSearchableItemActionType) { activity in
+                    state.handleSpotlightContinuation(activity)
+                }
         }
     }
 }

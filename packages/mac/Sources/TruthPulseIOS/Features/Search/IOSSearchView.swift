@@ -19,7 +19,7 @@ struct IOSSearchView: View {
                             .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if state.results.isEmpty && !trimmedQuery.isEmpty {
+                } else if state.results.isEmpty && !trimmedQuery.isEmpty && trimmedQuery.count >= 4 {
                     ContentUnavailableView.search(text: trimmedQuery)
                 } else if state.results.isEmpty {
                     VStack(spacing: 12) {
@@ -46,6 +46,33 @@ struct IOSSearchView: View {
             .refreshable {
                 await state.refreshMarkets()
             }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Menu {
+                        Picker("Trend", selection: $state.selectedWindow) {
+                            ForEach(TrendWindow.allCases) { window in
+                                Text(window.title).tag(window)
+                            }
+                        }
+
+                        Divider()
+
+                        Menu("Sync Interval") {
+                            Picker("Sync", selection: $state.syncInterval) {
+                                ForEach(IOSSyncInterval.allCases, id: \.self) { interval in
+                                    Text(interval.label).tag(interval)
+                                }
+                            }
+                        }
+
+                        if let lastSync = state.lastSyncDate {
+                            Text("Last synced \(lastSync, style: .relative) ago")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                }
+            }
         }
         .onAppear { state.onAppear() }
     }
@@ -55,9 +82,15 @@ struct IOSSearchView: View {
             Button {
                 openMarket(result.market)
             } label: {
-                IOSResultRowView(result: result)
+                IOSResultRowView(
+                    result: result,
+                    trend: state.trend(for: result.market)
+                )
             }
             .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+            .onAppear {
+                state.loadTrendIfNeeded(for: result.market)
+            }
             .accessibilityLabel("\(result.market.title), \(result.emphasizedOdds.map { "\($0) percent" } ?? "no odds") \(result.emphasizedOutcomeLabel)")
             .accessibilityHint("Opens market on Kalshi")
         }
@@ -69,7 +102,6 @@ struct IOSSearchView: View {
     }
 
     private func openMarket(_ market: MarketSummary) {
-        // Universal link: opens Kalshi app if installed, Safari otherwise
         let url = market.resolvedWebURL
         #if canImport(UIKit)
         UIApplication.shared.open(url)
