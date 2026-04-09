@@ -8,6 +8,7 @@ public final class SpotlightIndexer: Sendable {
     public init() {}
 
     private static func log(_ message: String) {
+        #if DEBUG
         let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
             .appendingPathComponent("TruthPulse", isDirectory: true)
         guard let dir else { return }
@@ -22,6 +23,7 @@ public final class SpotlightIndexer: Sendable {
         } else {
             try? data.write(to: url)
         }
+        #endif
     }
 
     /// Index all markets into Core Spotlight. Fire-and-forget.
@@ -38,18 +40,10 @@ public final class SpotlightIndexer: Sendable {
 
         let index = CSSearchableIndex.default()
 
-        // Delete old items first
-        index.deleteSearchableItems(withDomainIdentifiers: [Self.domainIdentifier]) { [items] error in
-            if let error {
-                Self.log("Delete failed: \(error)")
-            } else {
-                Self.log("Delete succeeded")
-            }
-
-            // Index in batches, chaining via global queue to avoid deadlock
-            let batchSize = 500
-            Self.indexBatch(items: items, index: index, batchSize: batchSize, offset: 0)
-        }
+        // Core Spotlight upserts by uniqueIdentifier — no need to delete first.
+        // Index in batches, chaining via global queue to avoid deadlock.
+        let batchSize = 500
+        Self.indexBatch(items: items, index: index, batchSize: batchSize, offset: 0)
     }
 
     private static func indexBatch(items: [CSSearchableItem], index: CSSearchableIndex, batchSize: Int, offset: Int) {

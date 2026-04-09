@@ -85,10 +85,6 @@ final class IOSAppState: ObservableObject {
             hasCachedMarkets = cached
             if cached {
                 lastSyncDate = await service.lastCacheDate()
-                let markets = await service.allMarkets
-                if !markets.isEmpty {
-                    spotlightIndexer.indexMarkets(markets)
-                }
             }
 
             let needsRefresh: Bool

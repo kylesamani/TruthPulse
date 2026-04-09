@@ -4,6 +4,7 @@ import TruthPulseCore
 struct QuickSearchView: View {
     @ObservedObject private var state: AppState
     @State private var now = Date()
+    @State private var isVisible = false
 
     init(state: AppState) {
         self.state = state
@@ -72,11 +73,13 @@ struct QuickSearchView: View {
         .clipped()
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .animation(.spring(response: 0.28, dampingFraction: 0.86), value: metrics)
-        .task {
-            state.onPopoverOpen()
+        .onAppear {
+            isVisible = true
+            now = Date()
         }
-        .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { value in
-            now = value
+        .onDisappear { isVisible = false }
+        .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { value in
+            if isVisible { now = value }
         }
     }
 

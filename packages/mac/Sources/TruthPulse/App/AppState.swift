@@ -26,7 +26,7 @@ enum SyncInterval: Int, CaseIterable {
 
     static func load() -> SyncInterval {
         let raw = UserDefaults.standard.integer(forKey: key)
-        return SyncInterval(rawValue: raw) ?? .oneMinute
+        return SyncInterval(rawValue: raw) ?? .oneHour
     }
 
     static func save(_ interval: SyncInterval) {
@@ -126,11 +126,6 @@ final class AppState: ObservableObject {
             hasCachedMarkets = cached
             if cached {
                 lastSyncDate = await service.lastCacheDate()
-                // Index cached markets into Spotlight immediately
-                let markets = await service.allMarkets
-                if !markets.isEmpty {
-                    spotlightIndexer.indexMarkets(markets)
-                }
             }
 
             // Only refresh from Kalshi if enough time has passed since last sync
