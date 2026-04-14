@@ -3,16 +3,15 @@
 ## What This Is
 Instant search across all open Kalshi prediction markets. Live odds, trend data, keyboard-driven. Zero backend.
 
-Available as a macOS menu bar app, Windows system tray app, Android app, and Raycast extension.
+Available as a macOS menu bar app, iOS app, Android app, and Raycast extension (macOS + Windows).
 
 ## Repository Structure
 
 ```
 packages/
-├── mac/          # macOS menu bar app (Swift/SwiftUI)
-├── windows/      # Windows system tray app (C#/WinUI 3/.NET 8)
+├── mac/          # macOS + iOS (Swift/SwiftUI, shared package)
 ├── android/      # Android app (Kotlin/Jetpack Compose)
-└── raycast/      # Raycast extension (TypeScript/React)
+└── raycast/      # Raycast extension (TypeScript/React, macOS + Windows)
 ```
 
 ## macOS App (`packages/mac/`)
@@ -56,16 +55,6 @@ packages/mac/Sources/TruthPulse/
     ├── TruthPulseBrand.swift       # Brand colors, glyph/wordmark shapes
     └── Formatting.swift            # Number/date formatters
 ```
-
-## Windows App (`packages/windows/`)
-
-### Commands
-- `cd packages/windows && dotnet build`
-- `cd packages/windows && dotnet run --project TruthPulse`
-- `cd packages/windows && dotnet publish -c Release -r win-x64 --self-contained`
-
-### Stack
-- C# / WinUI 3 / .NET 8, system tray with global hotkey
 
 ## Android App (`packages/android/`)
 
@@ -120,4 +109,4 @@ packages/android/app/src/main/java/com/truthpulse/
 - **Local search index**: Markets cached locally for instant typeahead
 - **Lazy trend loading**: Candlestick data fetched on selection, not upfront
 - **Field-aware ranking**: Title matches ranked higher than description matches, boosted by volume/liquidity
-- **Four independent ports**: Each platform is self-contained, no shared code
+- **Independent ports**: Each platform is self-contained, no shared code (macOS/iOS share a Swift package)
